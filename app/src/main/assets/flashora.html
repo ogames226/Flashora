@@ -93,13 +93,27 @@
       margin: 0;
       padding: 0;
       width: 100%;
-      min-height: 100%;
+      height: 100%;
       font-family: 'Cairo', 'CairoLocal', system-ui, -apple-system, sans-serif;
       background: var(--bg-grad);
       background-color: var(--bg);
       color: var(--text);
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    .app-scroll {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
       overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
+      touch-action: pan-y;
+      background: var(--bg-grad);
+      background-color: var(--bg);
     }
 
     button, input, select {
@@ -177,8 +191,8 @@
     .app-shell {
       max-width: 1120px;
       margin: 0 auto;
-      min-height: 100vh;
-      padding: calc(14px + env(safe-area-inset-top)) 16px calc(132px + env(safe-area-inset-bottom));
+      min-height: 100%;
+      padding: calc(14px + env(safe-area-inset-top)) 16px calc(168px + env(safe-area-inset-bottom));
       position: relative;
     }
 
@@ -472,6 +486,7 @@
       overflow-x: auto;
       padding-bottom: 6px;
       scrollbar-width: none;
+      touch-action: pan-x pan-y;
     }
     .h-scroll::-webkit-scrollbar { display: none; }
 
@@ -596,6 +611,7 @@
       overflow-x: auto;
       padding: 6px 0 12px;
       scrollbar-width: none;
+      touch-action: pan-x pan-y;
     }
     .chips-row::-webkit-scrollbar { display: none; }
     .chip {
@@ -977,6 +993,29 @@
     }
     .player-loader.visible { display: flex; }
 
+    .player-error-panel {
+      position: absolute;
+      inset: 0;
+      z-index: 214;
+      background: rgba(11, 15, 30, 0.94);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .player-error-panel.visible { display: flex; }
+    .player-error-card {
+      width: 100%;
+      max-width: 390px;
+      padding: 22px;
+      border-radius: 22px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-color: rgba(255, 77, 109, 0.45);
+    }
+
     .as-notice-banner {
       position: absolute;
       top: calc(64px + env(safe-area-inset-top));
@@ -1228,7 +1267,8 @@
   <input id="input-convert-exe" type="file" accept=".exe,application/octet-stream" multiple hidden />
   <input id="input-import-backup" type="file" accept=".json,application/json" hidden />
 
-  <!-- Main App Shell -->
+  <!-- Main App Scroll Container & Shell -->
+  <main id="app-scroll" class="app-scroll">
   <div class="app-shell">
     <header class="top-header">
       <div class="brand-row">
@@ -1501,6 +1541,17 @@
         </div>
         <div class="setting-row">
           <div class="setting-label">
+            <strong data-i18n="setting_renderer">محرك العرض الرسومي</strong>
+            <small data-i18n="setting_renderer_sub">جرّب Canvas إذا ظهرت شاشة سوداء</small>
+          </div>
+          <select id="set-renderer" class="select-field">
+            <option value="auto" data-i18n="rend_auto">تلقائي</option>
+            <option value="webgl" data-i18n="rend_webgl">WebGL (سريع)</option>
+            <option value="canvas" data-i18n="rend_canvas">Canvas (متوافق)</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
             <strong data-i18n="setting_vpad">لوحة التحكم اللمسية</strong>
             <small data-i18n="setting_vpad_sub">تظهر تلقائياً على شاشات اللمس</small>
           </div>
@@ -1542,6 +1593,7 @@
       </div>
     </section>
   </div>
+  </main>
 
   <!-- Big Floating Action Button -->
   <button id="fab-open-game" class="btn-primary fab-open" type="button">
@@ -1636,6 +1688,19 @@
           <div id="player-load-fill" class="progress-fill"></div>
         </div>
         <div id="player-load-pct" style="font-size:13px; color:var(--secondary); font-weight:800;">0%</div>
+      </div>
+
+      <!-- In-Player Error Panel -->
+      <div id="player-error-panel" class="player-error-panel">
+        <div class="glass-card player-error-card">
+          <strong id="player-err-title" style="font-size:17px; color:var(--danger);" data-i18n="player_err_title">تعذر تشغيل اللعبة</strong>
+          <div id="player-err-msg" style="font-size:13px; color:var(--text-muted); line-height:1.6;"></div>
+          <button id="btn-err-canvas" class="btn-primary" type="button" data-i18n="retry_canvas">تجربة وضع Canvas</button>
+          <div style="display:flex; gap:8px;">
+            <button id="btn-err-restart" class="btn-ghost" style="flex:1;" type="button" data-i18n="retry_game">إعادة تشغيل</button>
+            <button id="btn-err-close" class="btn-ghost btn-danger" style="flex:1;" type="button" data-i18n="close_player">إغلاق</button>
+          </div>
+        </div>
       </div>
 
       <!-- Virtual Touch Gamepad -->
@@ -1872,6 +1937,11 @@
         vpad_auto: "تلقائي (الجوال)",
         vpad_always: "مفعلة دائماً",
         vpad_off: "معطلة",
+        setting_renderer: "محرك العرض الرسومي",
+        setting_renderer_sub: "جرّب Canvas إذا ظهرت شاشة سوداء",
+        rend_auto: "تلقائي",
+        rend_webgl: "WebGL (سريع)",
+        rend_canvas: "Canvas (متوافق)",
         setting_keymap: "تخصيص أزرار اللمس ويد التحكم",
         customize_controls: "تخصيص الأزرار",
         settings_storage: "التخزين والبيانات",
@@ -1910,6 +1980,11 @@
         site_cat_custom: "مواقعي المضافة",
         show_controls: "إظهار الأدوات",
         loading_game: "جاري تحميل اللعبة…",
+        player_err_title: "تعذر تشغيل اللعبة",
+        retry_canvas: "تجربة وضع Canvas",
+        retry_game: "إعادة تشغيل",
+        close_player: "إغلاق",
+        retrying_canvas: "جاري إعادة المحاولة بوضع Canvas…",
         edit_game: "تعديل اللعبة",
         cancel: "إلغاء",
         save: "حفظ",
@@ -2005,6 +2080,11 @@
         vpad_auto: "Auto (Mobile)",
         vpad_always: "Always On",
         vpad_off: "Off",
+        setting_renderer: "Graphics Renderer",
+        setting_renderer_sub: "Try Canvas if a game shows a black screen",
+        rend_auto: "Auto",
+        rend_webgl: "WebGL (Fast)",
+        rend_canvas: "Canvas (Compatible)",
         setting_keymap: "Touch & Gamepad Key Mapping",
         customize_controls: "Customize Keys",
         settings_storage: "Storage & Data",
@@ -2043,6 +2123,11 @@
         site_cat_custom: "My Sites",
         show_controls: "Show Controls",
         loading_game: "Loading game…",
+        player_err_title: "Failed to Start Game",
+        retry_canvas: "Try Canvas Mode",
+        retry_game: "Restart",
+        close_player: "Close",
+        retrying_canvas: "Retrying with Canvas renderer…",
         edit_game: "Edit Game",
         cancel: "Cancel",
         save: "Save",
@@ -2133,6 +2218,7 @@
         accent: "flash",
         quality: "high",
         scaleMode: "fit",
+        renderer: "auto",
         volume: 85,
         vpadMode: "auto",
         vpadOpacity: 80,
@@ -2250,7 +2336,7 @@
        ========================================================================= */
     const SwfTools = {
       // Lightweight RFC1950/1951 Inflate (works offline on every browser/WebView & finds exact compressed end)
-      inflateZlibPrefix(bytes, startOffset) {
+      inflateZlibPrefix(bytes, startOffset, maxOut = Infinity) {
         // Zlib 2-byte header check
         if (startOffset + 6 > bytes.length) return null;
         const cmf = bytes[startOffset];
@@ -2342,7 +2428,12 @@
               if ((len ^ 0xffff) !== nlen) throw new Error("Bad stored len");
               pos += 4;
               if (pos + len > bytes.length) throw new Error("EOF");
-              for (let i = 0; i < len; i++) out.push(bytes[pos++]);
+              for (let i = 0; i < len; i++) {
+                out.push(bytes[pos++]);
+                if (out.length >= maxOut) {
+                  return { decompressed: new Uint8Array(out), compressedEnd: pos };
+                }
+              }
             } else {
               let litTree = FIXED_LIT, distTree = FIXED_DIST;
               if (btype === 2) {
@@ -2372,8 +2463,12 @@
               while (true) {
                 const sym = decodeSym(litTree);
                 if (sym === 256) break;
-                if (sym < 256) out.push(sym);
-                else {
+                if (sym < 256) {
+                  out.push(sym);
+                  if (out.length >= maxOut) {
+                    return { decompressed: new Uint8Array(out), compressedEnd: pos };
+                  }
+                } else {
                   const li = sym - 257;
                   if (li >= LEN_BASE.length) throw new Error("Bad len sym");
                   const length = LEN_BASE[li] + readBits(LEN_EXT[li]);
@@ -2381,15 +2476,23 @@
                   if (di >= DIST_BASE.length) throw new Error("Bad dist sym");
                   const dist = DIST_BASE[di] + readBits(DIST_EXT[di]);
                   if (dist > out.length) throw new Error("Bad dist");
-                  for (let k = 0; k < length; k++) out.push(out[out.length - dist]);
+                  for (let k = 0; k < length; k++) {
+                    out.push(out[out.length - dist]);
+                    if (out.length >= maxOut) {
+                      return { decompressed: new Uint8Array(out), compressedEnd: pos };
+                    }
+                  }
                 }
               }
             }
-          } while (!bfinal);
+          } while (!bfinal && out.length < maxOut);
           // Account for Adler-32 4-byte trailer aligned to byte boundary
           const endOffset = Math.min(bytes.length, pos + 4);
           return { decompressed: new Uint8Array(out), compressedEnd: endOffset };
         } catch (_) {
+          if (out.length >= maxOut) {
+            return { decompressed: new Uint8Array(out), compressedEnd: pos };
+          }
           return null;
         }
       },
@@ -2409,20 +2512,9 @@
         if (sig === "FWS") {
           body = bytes.subarray(8, Math.min(bytes.length, 64));
         } else if (sig === "CWS") {
-          if (typeof DecompressionStream !== "undefined") {
-            try {
-              const ds = new DecompressionStream("deflate");
-              const writer = ds.writable.getWriter();
-              writer.write(bytes.subarray(8)).catch(() => {});
-              writer.close().catch(() => {});
-              const resp = new Response(ds.readable);
-              const ab = await resp.arrayBuffer();
-              body = new Uint8Array(ab).subarray(0, 64);
-            } catch (_) {}
-          }
-          if (!body) {
-            const inf = this.inflateZlibPrefix(bytes, 8);
-            if (inf) body = inf.decompressed.subarray(0, 64);
+          const inf = this.inflateZlibPrefix(bytes, 8, 64);
+          if (inf && inf.decompressed.length >= 9) {
+            body = inf.decompressed.subarray(0, 64);
           }
         }
 
@@ -2495,20 +2587,21 @@
         if (len < 64) throw new Error(t("err_small"));
         const dv = new DataView(arrayBuffer);
 
-        // Step 1: Check Flash Projector marker 0xFA123456 at EOF (last 8 bytes)
-        if (len >= 16) {
-          const markerLE = dv.getUint32(len - 8, true);
-          const markerBE = dv.getUint32(len - 8, false);
-          if (markerLE === 0xFA123456 || markerBE === 0xFA123456) {
-            const swfLen = dv.getUint32(len - 4, true);
-            const swfStart = len - 8 - swfLen;
-            if (swfLen >= 16 && swfStart >= 0) {
-              const valid = this.isValidSwfSignature(bytes, swfStart);
-              if (valid) {
-                const extracted = bytes.slice(swfStart, len - 8).buffer;
-                const info = await this.parseSwfInfo(extracted);
-                return { swfBuffer: extracted, info, method: "Projector Footer (0xFA123456)" };
-              }
+        // Step 1: Check Flash Projector marker 0xFA123456 at EOF or before Authenticode signature tail
+        const searchFloor = Math.max(8, len - 65536);
+        for (let tail = len - 8; tail >= searchFloor; tail--) {
+          const b0 = bytes[tail], b1 = bytes[tail + 1], b2 = bytes[tail + 2], b3 = bytes[tail + 3];
+          const isLe = (b0 === 0x56 && b1 === 0x34 && b2 === 0x12 && b3 === 0xFA);
+          const isBe = (b0 === 0xFA && b1 === 0x12 && b2 === 0x34 && b3 === 0x56);
+          if (!isLe && !isBe) continue;
+          const swfLen = dv.getUint32(tail + 4, true);
+          const swfStart = tail - swfLen;
+          if (swfLen >= 16 && swfStart >= 0) {
+            const valid = this.isValidSwfSignature(bytes, swfStart);
+            if (valid) {
+              const extracted = bytes.slice(swfStart, tail).buffer;
+              const info = await this.parseSwfInfo(extracted);
+              return { swfBuffer: extracted, info, method: "Projector Footer (0xFA123456)" };
             }
           }
         }
@@ -2531,8 +2624,9 @@
               }
             }
           } else if (check.isCws) {
-            // Must have valid zlib CMF byte (usually 0x78)
-            if (bytes[pos + 8] === 0x78) {
+            // Check valid zlib CMF+FLG checksum (CMF method == 8 deflate, (CMF*256+FLG) % 31 == 0)
+            const cmf = bytes[pos + 8], flg = bytes[pos + 9];
+            if ((cmf & 0x0F) === 8 && (((cmf << 8) | flg) % 31 === 0)) {
               const inf = this.inflateZlibPrefix(bytes, pos + 8);
               if (inf && inf.decompressed.length >= 12) {
                 const endPos = Math.min(len, inf.compressedEnd);
@@ -2737,10 +2831,36 @@
         return false;
       },
 
-      async openGame(gameRecord) {
+      unlockAudio() {
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) {
+            window.__flashoraAudioCtx = window.__flashoraAudioCtx || new AC();
+            if (window.__flashoraAudioCtx.state === "suspended") {
+              window.__flashoraAudioCtx.resume().catch(() => {});
+            }
+          }
+        } catch (_) {}
+      },
+
+      showErrorPanel(message) {
+        const panel = document.getElementById("player-error-panel");
+        const msgEl = document.getElementById("player-err-msg");
+        if (msgEl) msgEl.textContent = message || t("err_corrupt");
+        if (panel) panel.classList.add("visible");
+      },
+
+      hideErrorPanel() {
+        const panel = document.getElementById("player-error-panel");
+        if (panel) panel.classList.remove("visible");
+      },
+
+      async openGame(gameRecord, options = {}) {
         this.currentGame = gameRecord;
         this.paused = false;
         this.rotated = false;
+        this.unlockAudio();
+        this.hideErrorPanel();
         document.getElementById("ruffle-mount").classList.remove("rotated-90", "scale-original");
         document.getElementById("player-title").textContent = gameRecord.name;
         const info = gameRecord.swfInfo;
@@ -2772,9 +2892,15 @@
         if (!ok || !window.RufflePlayer) {
           clearInterval(this.loadInterval);
           loader.classList.remove("visible");
-          UI.toast(t("engine_error"), "error");
+          this.showErrorPanel(t("engine_error"));
           return;
         }
+
+        const chosenRenderer = options.forceRenderer || (Settings.data.renderer && Settings.data.renderer !== "auto" ? Settings.data.renderer : undefined);
+        window.RufflePlayer.config = {
+          ...(window.RufflePlayer.config || {}),
+          ...(chosenRenderer ? { preferredRenderer: chosenRenderer } : {})
+        };
 
         const mount = document.getElementById("ruffle-mount");
         mount.innerHTML = "";
@@ -2806,16 +2932,27 @@
 
         try {
           const dataCopy = gameRecord.swfBuffer.slice(0);
-          await player.load({
+          const loadConfig = {
             data: dataCopy,
+            swfFileName: gameRecord.fileName || "game.swf",
             autoplay: "on",
             unmuteOverlay: "hidden",
+            splashScreen: false,
             quality: Settings.data.quality,
             letterbox: "on",
             scale: Settings.data.scaleMode === "fill" ? "exactFit" : "showAll",
             backgroundColor: "#050711",
+            maxExecutionDuration: 30,
             warnOnUnsupportedContent: false
-          });
+          };
+          if (gameRecord.baseUrl) {
+            loadConfig.base = gameRecord.baseUrl;
+          }
+          if (chosenRenderer) {
+            loadConfig.preferredRenderer = chosenRenderer;
+          }
+
+          await player.load(loadConfig);
           try { player.volume = this.muted ? 0 : vol; } catch (_) {}
 
           clearInterval(this.loadInterval);
@@ -2834,8 +2971,14 @@
           }
         } catch (err) {
           clearInterval(this.loadInterval);
+          if (!options.forceRenderer && chosenRenderer !== "canvas") {
+            UI.toast(t("retrying_canvas"), "info");
+            return this.openGame(gameRecord, { ...options, forceRenderer: "canvas" });
+          }
           loader.classList.remove("visible");
-          UI.toast((err && err.message) || t("err_corrupt"), "error");
+          const errMsg = (err && err.message) || t("err_corrupt");
+          this.showErrorPanel(errMsg);
+          UI.toast(errMsg, "error");
         }
       },
 
@@ -2950,6 +3093,7 @@
       close() {
         clearInterval(this.loadInterval);
         clearTimeout(this.hudTimer);
+        this.hideErrorPanel();
         if (this.player) {
           try { if (typeof this.player.suspend === "function") this.player.suspend(); } catch (_) {}
         }
@@ -3478,6 +3622,72 @@
         direct: false,
         descAr: "تشكيلة ضخمة من ألعاب الفلاش المتنوعة بجميع التصنيفات.",
         descEn: "Wide variety of classic Flash arcade games across all genres."
+      },
+      {
+        id: "addictinggames_flash",
+        name: "Addicting Games (Flash Classics)",
+        url: "https://www.addictinggames.com/tag/flash-games",
+        category: "portal",
+        badgeAr: "كلاسيك",
+        badgeEn: "Classic Portal",
+        direct: false,
+        descAr: "بوابة ألعاب فلاش شهيرة تضم مئات ألعاب الأكشن والألغاز والسباقات.",
+        descEn: "Legendary Flash portal hosting hundreds of action, puzzle, and racing hits."
+      },
+      {
+        id: "silvergames_flash",
+        name: "Silvergames — Flash Classics",
+        url: "https://www.silvergames.com/en/t/flash",
+        category: "portal",
+        badgeAr: "أكشن ومهارة",
+        badgeEn: "Action & Skill",
+        direct: false,
+        descAr: "مكتبة كبيرة لألعاب الفلاش الأسطورية مع تشغيل والتقاط سهل من المتصفح.",
+        descEn: "Large library of classic Flash games with fast in-browser SWF capture."
+      },
+      {
+        id: "kbhgames_flash",
+        name: "KBH Games — Flash Archive",
+        url: "https://kbhgames.com/tag/flash",
+        category: "portal",
+        badgeAr: "إيقاع ومنصات",
+        badgeEn: "Arcade & Rhythm",
+        direct: false,
+        descAr: "موقع مميز لألعاب الإيقاع والمنصات والأركيد الكلاسيكية.",
+        descEn: "Popular portal featuring rhythm, platformer, and arcade Flash games."
+      },
+      {
+        id: "gamejolt_flash",
+        name: "Game Jolt — Flash & SWF",
+        url: "https://gamejolt.com/games/tag-flash",
+        category: "indie",
+        badgeAr: "إندي وتحميل",
+        badgeEn: "Indie SWF/EXE",
+        direct: true,
+        descAr: "ألعاب فلاش مستقلة من مطورين هواة مع حزم قابلة للتنزيل.",
+        descEn: "Indie Flash builds from creators with downloadable archives."
+      },
+      {
+        id: "ia_newgrounds_mirror",
+        name: "Internet Archive — Flash Animations & Games",
+        url: "https://archive.org/details/flash-games-collection",
+        category: "archive",
+        badgeAr: "حزم مباشرة",
+        badgeEn: "Direct Packs",
+        direct: true,
+        descAr: "مجموعات ألعاب فلاش مجمعة على Internet Archive للتحميل والتشغيل السريع.",
+        descEn: "Bundled Flash game collections hosted on Internet Archive for quick downloads."
+      },
+      {
+        id: "flasharch",
+        name: "FlashArch Preservation Project",
+        url: "https://www.flasharch.com/archive",
+        category: "archive",
+        badgeAr: "أرشيف حفظ",
+        badgeEn: "Preservation",
+        direct: true,
+        descAr: "مشروع لحفظ وفهرسة آلاف ألعاب الفلاش النادرة مع بحث سريع.",
+        descEn: "Searchable preservation archive indexing thousands of classic Flash titles."
       }
     ];
 
@@ -3602,7 +3812,7 @@
         box.innerHTML = `<div style="padding:12px; color:var(--secondary); font-weight:700; font-size:13px;">${t("archive_loading")}</div>`;
         try {
           const term = q ? `(${q}) AND ` : "";
-          const query = `${term}mediatype:software AND format:"Shockwave Flash"`;
+          const query = `${term}mediatype:software AND (format:"Shockwave Flash" OR collection:softwarelibrary_flash)`;
           const apiUrl = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}&fl[]=identifier,title,downloads&sort[]=downloads+desc&rows=12&output=json`;
           const resp = await fetch(apiUrl);
           if (!resp.ok) throw new Error("HTTP " + resp.status);
@@ -3638,13 +3848,29 @@
           if (!metaResp.ok) throw new Error("HTTP " + metaResp.status);
           const meta = await metaResp.json();
           const files = meta.files || [];
-          const swfFile = files.find((f) => /\.swf$/i.test(f.name)) || files.find((f) => /\.exe$/i.test(f.name));
-          if (!swfFile) {
+          const scoreFile = (f, baseTier) => {
+            const name = (f.name || "").toLowerCase();
+            const isLoader = /(preloader|loader|intro|thumb|banner|preview)/.test(name) ? 1 : 0;
+            const sz = Number(f.size || 0);
+            return [baseTier, isLoader, -sz];
+          };
+          const cmp = (a, b, tA, tB) => {
+            const sa = scoreFile(a, tA), sb = scoreFile(b, tB);
+            return (sa[0] - sb[0]) || (sa[1] - sb[1]) || (sa[2] - sb[2]);
+          };
+          const candidates = [
+            ...files.filter((f) => /\.swf$/i.test(f.name)).map((f) => ({ f, tier: 0 })),
+            ...files.filter((f) => /\.exe$/i.test(f.name)).map((f) => ({ f, tier: 1 })),
+            ...files.filter((f) => /\.zip$/i.test(f.name)).map((f) => ({ f, tier: 2 }))
+          ].sort((a, b) => cmp(a.f, b.f, a.tier, b.tier));
+          const picked = candidates.length ? candidates[0].f : null;
+          if (!picked) {
             UI.toast(t("archive_no_swf"), "error");
             return;
           }
-          const dlUrl = `https://archive.org/download/${encodeURIComponent(identifier)}/${encodeURIComponent(swfFile.name)}`;
-          await this.downloadAndPlayUrl(dlUrl, swfFile.name);
+          const encodedPath = picked.name.split("/").map(encodeURIComponent).join("/");
+          const dlUrl = `https://archive.org/download/${encodeURIComponent(identifier)}/${encodedPath}`;
+          await this.downloadAndPlayUrl(dlUrl, picked.name.split("/").pop());
         } catch (err) {
           UI.toast((err && err.message) || t("err_not_flash"), "error");
         }
@@ -3664,19 +3890,19 @@
           const resp = await fetch(cleanUrl);
           if (!resp.ok) throw new Error("HTTP " + resp.status);
           const ab = await resp.arrayBuffer();
-          await UI.importFetchedArrayBuffer(guessName, ab);
+          await UI.importFetchedArrayBuffer(guessName, ab, cleanUrl);
         } catch (err) {
           UI.toast((err && err.message) || t("err_not_flash"), "error");
         }
       }
     };
 
-    window.onNativeGameReady = async function (fileName, internalUrl) {
+    window.onNativeGameReady = async function (fileName, internalUrl, sourceUrl) {
       try {
         const resp = await fetch(internalUrl);
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         const ab = await resp.arrayBuffer();
-        await UI.importFetchedArrayBuffer(fileName, ab);
+        await UI.importFetchedArrayBuffer(fileName, ab, sourceUrl);
       } catch (err) {
         UI.toast((err && err.message) || t("err_not_flash"), "error");
       }
@@ -3716,6 +3942,8 @@
         this.activeTab = tab;
         document.querySelectorAll(".tab-view").forEach((el) => el.classList.toggle("active", el.id === "view-" + tab));
         document.querySelectorAll(".nav-item").forEach((el) => el.classList.toggle("active", el.dataset.tab === tab));
+        const sc = document.getElementById("app-scroll");
+        if (sc) sc.scrollTop = 0;
         if (tab === "sites" && !SitesDirectory.archiveItems.length && !SitesDirectory.archiveBusy) {
           SitesDirectory.searchArchive("flash game");
         }
@@ -3744,6 +3972,8 @@
         document.getElementById("set-theme").value = Settings.data.theme;
         document.getElementById("set-quality").value = Settings.data.quality;
         document.getElementById("set-scale").value = Settings.data.scaleMode;
+        const rendEl = document.getElementById("set-renderer");
+        if (rendEl) rendEl.value = Settings.data.renderer || "auto";
         document.getElementById("set-volume").value = Settings.data.volume;
         document.getElementById("set-volume-val").textContent = Settings.data.volume + "%";
         document.getElementById("set-vpad").value = Settings.data.vpadMode;
@@ -3770,7 +4000,8 @@
 
       async refreshLists() {
         try {
-          this.games = await FlashoraDB.getAll();
+          const all = await FlashoraDB.getAll();
+          this.games = all.map(({ swfBuffer, ...meta }) => meta);
         } catch (_) {
           this.games = [];
         }
@@ -3896,11 +4127,11 @@
         }
       },
 
-      async importFetchedArrayBuffer(fileName, ab) {
+      async importFetchedArrayBuffer(fileName, ab, sourceUrl = null) {
         const lower = (fileName || "").toLowerCase();
         let swfBuffer = ab;
         let info = null;
-        let cleanName = fileName.replace(/\.(swf|exe)$/i, "");
+        let cleanName = fileName.replace(/\.(swf|exe|zip)$/i, "");
 
         if (lower.endsWith(".exe")) {
           const res = await SwfTools.extractFromExe(ab);
@@ -3910,12 +4141,19 @@
           info = await SwfTools.parseSwfInfo(ab);
         }
 
-        const record = await this.saveGameBuffer(cleanName + ".swf", swfBuffer, info);
+        let baseUrl = null;
+        if (sourceUrl && /^https?:\/\//i.test(sourceUrl)) {
+          baseUrl = sourceUrl.replace(/[^/?#]+(\?.*)?(#.*)?$/, "");
+        }
+        const record = await this.saveGameBuffer(cleanName + ".swf", swfBuffer, info, {
+          sourceUrl: sourceUrl || null,
+          baseUrl
+        });
         RuffleEngine.openGame(record);
         return record;
       },
 
-      async saveGameBuffer(fileName, swfBuffer, swfInfo) {
+      async saveGameBuffer(fileName, swfBuffer, swfInfo, extra = {}) {
         const record = {
           id: "game_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
           name: fileName.replace(/\.swf$/i, ""),
@@ -3927,6 +4165,8 @@
           playCount: 0,
           isFavorite: false,
           thumbnail: null,
+          sourceUrl: extra.sourceUrl || null,
+          baseUrl: extra.baseUrl || null,
           swfBuffer,
           swfInfo
         };
@@ -4181,6 +4421,12 @@
         document.getElementById("set-vpad").addEventListener("change", (e) => {
           Settings.data.vpadMode = e.target.value; Settings.save(); VirtualPad.syncVisibility();
         });
+        const rendSel = document.getElementById("set-renderer");
+        if (rendSel) {
+          rendSel.addEventListener("change", (e) => {
+            Settings.data.renderer = e.target.value; Settings.save();
+          });
+        }
         document.getElementById("vpad-opacity-range").addEventListener("input", (e) => {
           Settings.data.vpadOpacity = Number(e.target.value); Settings.save();
         });
@@ -4207,6 +4453,15 @@
         document.getElementById("btn-open-help").addEventListener("click", () => this.openModal("modal-help"));
         document.getElementById("btn-reload-ruffle").addEventListener("click", () => RuffleEngine.load());
         document.getElementById("btn-engine-status").addEventListener("click", () => RuffleEngine.load());
+
+        // Player Error Recovery Controls
+        document.getElementById("btn-err-canvas").addEventListener("click", () => {
+          if (RuffleEngine.currentGame) {
+            RuffleEngine.openGame(RuffleEngine.currentGame, { forceRenderer: "canvas" });
+          }
+        });
+        document.getElementById("btn-err-restart").addEventListener("click", () => RuffleEngine.restart());
+        document.getElementById("btn-err-close").addEventListener("click", () => RuffleEngine.close());
 
         // Player HUD Controls
         document.getElementById("btn-player-close").addEventListener("click", () => RuffleEngine.close());

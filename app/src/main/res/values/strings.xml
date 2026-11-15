@@ -12,5 +12,7 @@
     <string name="browser_no_swf_found">لم يتم العثور على روابط SWF أو EXE مباشرة في هذه الصفحة</string>
     <string name="browser_detected_files">تم العثور على ملفات فلاش في الصفحة</string>
     <string name="browser_download_failed">تعذر تحميل الملف من الرابط</string>
+    <string name="browser_html_error">الرابط أعاد صفحة ويب وليس ملف لعبة SWF/EXE. افتح الموقع واضغط «التقاط SWF»</string>
+    <string name="browser_zip_no_swf">الأرشيف ZIP لا يحتوي على ملف SWF أو EXE صالح</string>
     <string name="cancel">إلغاء</string>
 </resources>

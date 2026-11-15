@@ -101,11 +101,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
+import java.util.zip.GZIPInputStream
+import java.util.zip.ZipInputStream
 
 class MainActivity : ComponentActivity() {
 
@@ -121,6 +125,7 @@ class MainActivity : ComponentActivity() {
     private var browserPageLoading by mutableStateOf(false)
     private var isDownloadingGame by mutableStateOf(false)
     private var detectedFlashUrls by mutableStateOf<List<String>>(emptyList())
+    private var capturedPageFlashUrls by mutableStateOf<List<String>>(emptyList())
 
     private val incomingGamesDir: File by lazy {
         File(cacheDir, "incoming_games").apply { mkdirs() }
@@ -206,26 +211,36 @@ class MainActivity : ComponentActivity() {
                         exit = slideOutVertically(targetOffsetY = { it / 6 }) + fadeOut(),
                     ) {
                         activeBrowserUrl?.let { startUrl ->
+                            val referer = browserCurrentUrl.ifBlank { startUrl }
                             InAppFlashBrowserOverlay(
                                 initialUrl = startUrl,
-                                currentUrl = browserCurrentUrl.ifBlank { startUrl },
+                                currentUrl = referer,
                                 isPageLoading = browserPageLoading,
                                 isDownloadingGame = isDownloadingGame,
                                 detectedUrls = detectedFlashUrls,
+                                capturedCount = capturedPageFlashUrls.size,
                                 onDismissDetected = { detectedFlashUrls = emptyList() },
                                 onWebViewCreated = { siteWebViewRef = it },
                                 onUrlChanged = { browserCurrentUrl = it },
+                                onPageNavigationStarted = { capturedPageFlashUrls = emptyList() },
+                                onPassiveFlashUrlCaptured = { assetUrl ->
+                                    runOnUiThread {
+                                        if (assetUrl !in capturedPageFlashUrls && capturedPageFlashUrls.size < 40) {
+                                            capturedPageFlashUrls = capturedPageFlashUrls + assetUrl
+                                        }
+                                    }
+                                },
                                 onLoadingChanged = { browserPageLoading = it },
                                 onClose = { closeInAppBrowser() },
                                 onSniffSwf = { sniffCurrentPageForFlash() },
                                 onPickDetectedUrl = { pickedUrl ->
                                     detectedFlashUrls = emptyList()
                                     val guess = URLUtil.guessFileName(pickedUrl, null, null)
-                                    downloadAndDeliverToFlashora(pickedUrl, guess)
+                                    downloadAndDeliverToFlashora(pickedUrl, guess, referer)
                                 },
                                 onDownloadIntercepted = { url, contentDisposition, mimeType ->
                                     val guess = URLUtil.guessFileName(url, contentDisposition, mimeType)
-                                    downloadAndDeliverToFlashora(url, guess)
+                                    downloadAndDeliverToFlashora(url, guess, referer)
                                 },
                             )
                         }
@@ -247,6 +262,7 @@ class MainActivity : ComponentActivity() {
 
     private fun closeInAppBrowser() {
         detectedFlashUrls = emptyList()
+        capturedPageFlashUrls = emptyList()
         siteWebViewRef?.stopLoading()
         siteWebViewRef?.destroy()
         siteWebViewRef = null
@@ -256,20 +272,27 @@ class MainActivity : ComponentActivity() {
 
     private fun sniffCurrentPageForFlash() {
         val wv = siteWebViewRef ?: return
+        val referer = browserCurrentUrl.ifBlank { activeBrowserUrl }
         val script = """
             (function() {
               var found = [];
               function add(u) {
                 if (!u || typeof u !== 'string') return;
+                var cleaned = u.trim().replace(/\\\//g, '/').replace(/&amp;/g, '&');
+                if (!cleaned || /^javascript:/i.test(cleaned)) return;
                 try {
-                  var abs = new URL(u, location.href).href;
-                  if (/\.(swf|exe)(\?|$|#)/i.test(abs) && found.indexOf(abs) === -1) {
+                  var abs = new URL(cleaned, location.href).href;
+                  if (/\.(swf|exe|zip)(\?|\#|&|$)/i.test(abs) && found.indexOf(abs) === -1) {
                     found.push(abs);
                   }
                 } catch(e) {}
               }
-              document.querySelectorAll('a[href], embed[src], object[data], iframe[src], source[src]').forEach(function(el) {
+              document.querySelectorAll('a[href], embed[src], object[data], iframe[src], source[src], ruffle-player, ruffle-embed, ruffle-object').forEach(function(el) {
                 add(el.getAttribute('href') || el.getAttribute('src') || el.getAttribute('data'));
+                try { if (el.config && el.config.url) add(el.config.url); } catch(e) {}
+              });
+              document.querySelectorAll('[data-swf], [data-src], [data-url], [data-game], [data-file]').forEach(function(el) {
+                add(el.getAttribute('data-swf') || el.getAttribute('data-src') || el.getAttribute('data-url') || el.getAttribute('data-game') || el.getAttribute('data-file'));
               });
               document.querySelectorAll('param[name="movie"], param[name="src"]').forEach(function(el) {
                 add(el.getAttribute('value'));
@@ -277,33 +300,70 @@ class MainActivity : ComponentActivity() {
               if (performance && performance.getEntriesByType) {
                 performance.getEntriesByType('resource').forEach(function(r) { add(r.name); });
               }
+              try {
+                var re = /((?:https?:)?(?:\\?\/)+[^\s"'<>\\)]+?\.(?:swf|exe)(?:\?[^\s"'<>\\)]*)?)|(["'])([^"'\s<>]+\.(?:swf|exe)(?:\?[^"'\s<>]*)?)\2/gi;
+                var bodyText = document.documentElement ? document.documentElement.innerHTML : '';
+                if (bodyText && bodyText.length < 1500000) {
+                  var m;
+                  while ((m = re.exec(bodyText)) !== null && found.length < 40) {
+                    add(m[1] || m[3]);
+                  }
+                }
+              } catch(e) {}
               return JSON.stringify(found);
             })();
         """.trimIndent()
 
         wv.evaluateJavascript(script) { raw ->
             try {
-                val decoded = JSONTokenerCompat.parseStringArray(raw)
-                if (decoded.isEmpty()) {
+                val domUrls = JSONTokenerCompat.parseStringArray(raw)
+                val merged = (capturedPageFlashUrls + domUrls)
+                    .distinct()
+                    .sortedWith(
+                        compareBy<String>(
+                            {
+                                val lower = it.substringBefore('?').substringBefore('#').lowercase()
+                                when {
+                                    lower.endsWith(".swf") -> 0
+                                    lower.endsWith(".exe") -> 1
+                                    else -> 2
+                                }
+                            },
+                            { it.lowercase().contains("preloader") || it.lowercase().contains("loader") },
+                        ),
+                    )
+                if (merged.isEmpty()) {
                     Toast.makeText(
                         this,
                         getString(R.string.browser_no_swf_found),
                         Toast.LENGTH_SHORT,
                     ).show()
-                } else if (decoded.size == 1) {
-                    val onlyUrl = decoded.first()
+                } else if (merged.size == 1) {
+                    val onlyUrl = merged.first()
                     val guess = URLUtil.guessFileName(onlyUrl, null, null)
-                    downloadAndDeliverToFlashora(onlyUrl, guess)
+                    downloadAndDeliverToFlashora(onlyUrl, guess, referer)
                 } else {
-                    detectedFlashUrls = decoded
+                    detectedFlashUrls = merged
                 }
             } catch (_: Exception) {
-                Toast.makeText(this, getString(R.string.browser_no_swf_found), Toast.LENGTH_SHORT).show()
+                val fallback = capturedPageFlashUrls.distinct()
+                if (fallback.size == 1) {
+                    val onlyUrl = fallback.first()
+                    downloadAndDeliverToFlashora(onlyUrl, URLUtil.guessFileName(onlyUrl, null, null), referer)
+                } else if (fallback.size > 1) {
+                    detectedFlashUrls = fallback
+                } else {
+                    Toast.makeText(this, getString(R.string.browser_no_swf_found), Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
-    private fun downloadAndDeliverToFlashora(rawUrl: String, suggestedName: String) {
+    private fun downloadAndDeliverToFlashora(
+        rawUrl: String,
+        suggestedName: String,
+        refererUrl: String? = null,
+    ) {
         if (isDownloadingGame) return
         isDownloadingGame = true
 
@@ -317,16 +377,24 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    val chromeUa =
+                        "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
                     var currentUrl = rawUrl
                     var conn: HttpURLConnection? = null
                     var redirects = 0
-                    while (redirects < 6) {
+                    while (redirects < 8) {
                         val urlObj = URL(currentUrl)
                         conn = (urlObj.openConnection() as HttpURLConnection).apply {
                             instanceFollowRedirects = false
                             connectTimeout = 20000
-                            readTimeout = 30000
-                            setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 13) Flashora/1.0")
+                            readTimeout = 45000
+                            setRequestProperty("User-Agent", chromeUa)
+                            setRequestProperty("Accept", "*/*")
+                            if (!refererUrl.isNullOrBlank() &&
+                                (refererUrl.startsWith("http://") || refererUrl.startsWith("https://"))
+                            ) {
+                                setRequestProperty("Referer", refererUrl)
+                            }
                             val cookies = CookieManager.getInstance().getCookie(currentUrl)
                             if (!cookies.isNullOrBlank()) {
                                 setRequestProperty("Cookie", cookies)
@@ -344,6 +412,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     val activeConn = conn ?: error("Connection failed")
+                    val tempFile = File(incomingGamesDir, "tmp_${UUID.randomUUID()}")
                     try {
                         val code = activeConn.responseCode
                         if (code !in 200..299) {
@@ -352,38 +421,75 @@ class MainActivity : ComponentActivity() {
 
                         val disp = activeConn.getHeaderField("Content-Disposition")
                         val mime = activeConn.contentType
-                        var finalName = if (suggestedName.endsWith(".swf", true) || suggestedName.endsWith(".exe", true)) {
+                        var finalName = if (
+                            suggestedName.endsWith(".swf", true) ||
+                            suggestedName.endsWith(".exe", true) ||
+                            suggestedName.endsWith(".zip", true)
+                        ) {
                             suggestedName
                         } else {
                             URLUtil.guessFileName(currentUrl, disp, mime)
                         }
-                        if (!finalName.endsWith(".swf", true) && !finalName.endsWith(".exe", true)) {
-                            val pathPart = Uri.parse(currentUrl).lastPathSegment
-                            finalName = if (!pathPart.isNullOrBlank() && (pathPart.endsWith(".swf", true) || pathPart.endsWith(".exe", true))) {
-                                pathPart
-                            } else {
-                                "${finalName.substringBeforeLast('.')}.swf"
-                            }
-                        }
 
-                        val token = "${UUID.randomUUID()}_${finalName.replace(Regex("[^a-zA-Z0-9._-]"), "_")}"
-                        val outFile = File(incomingGamesDir, token)
                         activeConn.inputStream.use { input ->
-                            FileOutputStream(outFile).use { output ->
+                            FileOutputStream(tempFile).use { output ->
                                 input.copyTo(output, bufferSize = 16384)
                             }
                         }
-                        Pair(finalName, "https://appassets.androidplatform.net/cache-games/$token")
+
+                        val preparedFile = if (isGzipFile(tempFile)) {
+                            val unzipped = File(incomingGamesDir, "gz_${UUID.randomUUID()}")
+                            GZIPInputStream(BufferedInputStream(FileInputStream(tempFile))).use { gz ->
+                                FileOutputStream(unzipped).use { out -> gz.copyTo(out, bufferSize = 16384) }
+                            }
+                            tempFile.delete()
+                            unzipped
+                        } else {
+                            tempFile
+                        }
+
+                        try {
+                            if (looksLikeHtmlPage(preparedFile)) {
+                                error(getString(R.string.browser_html_error))
+                            }
+
+                            var deliveredFile: File? = null
+                            if (isZipFile(preparedFile)) {
+                                val extracted = extractPlayableFromZip(preparedFile, incomingGamesDir)
+                                    ?: error(getString(R.string.browser_zip_no_swf))
+                                finalName = extracted.first
+                                deliveredFile = extracted.second
+                            } else {
+                                finalName = normalizeFlashFilename(finalName, currentUrl, preparedFile)
+                                val token = "${UUID.randomUUID()}_${finalName.replace(Regex("[^a-zA-Z0-9._-]"), "_")}"
+                                val outFile = File(incomingGamesDir, token)
+                                if (!preparedFile.renameTo(outFile)) {
+                                    preparedFile.copyTo(outFile, overwrite = true)
+                                }
+                                deliveredFile = outFile
+                            }
+
+                            Triple(
+                                finalName,
+                                "https://appassets.androidplatform.net/cache-games/${deliveredFile.name}",
+                                currentUrl,
+                            )
+                        } finally {
+                            if (preparedFile.exists()) preparedFile.delete()
+                        }
                     } finally {
+                        if (tempFile.exists()) tempFile.delete()
                         activeConn.disconnect()
                     }
                 }
             }
 
             isDownloadingGame = false
-            result.onSuccess { (finalName, internalUrl) ->
+            result.onSuccess { (finalName, internalUrl, sourceUrl) ->
                 closeInAppBrowser()
-                val js = "window.onNativeGameReady && window.onNativeGameReady(${JSONObject.quote(finalName)}, ${JSONObject.quote(internalUrl)});"
+                val js =
+                    "window.onNativeGameReady && window.onNativeGameReady(" +
+                        "${JSONObject.quote(finalName)}, ${JSONObject.quote(internalUrl)}, ${JSONObject.quote(sourceUrl)});"
                 mainWebViewRef?.evaluateJavascript(js, null)
             }.onFailure { err ->
                 val msg = err.message ?: getString(R.string.browser_download_failed)
@@ -392,6 +498,102 @@ class MainActivity : ComponentActivity() {
                 mainWebViewRef?.evaluateJavascript(js, null)
             }
         }
+    }
+
+    private fun readMagicBytes(file: File, count: Int = 64): ByteArray {
+        if (!file.exists() || file.length() == 0L) return ByteArray(0)
+        return FileInputStream(file).use { fis ->
+            val buf = ByteArray(count)
+            val n = fis.read(buf)
+            if (n > 0) buf.copyOf(n) else ByteArray(0)
+        }
+    }
+
+    private fun isGzipFile(file: File): Boolean {
+        val m = readMagicBytes(file, 2)
+        return m.size >= 2 && (m[0].toInt() and 0xFF) == 0x1F && (m[1].toInt() and 0xFF) == 0x8B
+    }
+
+    private fun isZipFile(file: File): Boolean {
+        val m = readMagicBytes(file, 4)
+        return m.size >= 4 && m[0] == 0x50.toByte() && m[1] == 0x4B.toByte() &&
+            m[2] == 0x03.toByte() && m[3] == 0x04.toByte()
+    }
+
+    private fun looksLikeHtmlPage(file: File): Boolean {
+        val m = readMagicBytes(file, 256)
+        if (m.isEmpty()) return true
+        val head = String(m, Charsets.UTF_8)
+            .trimStart('\uFEFF', ' ', '\t', '\r', '\n')
+            .lowercase()
+        return head.startsWith("<!doctype") ||
+            head.startsWith("<html") ||
+            head.startsWith("<head") ||
+            head.startsWith("<body") ||
+            head.startsWith("<?xml") ||
+            head.startsWith("<script")
+    }
+
+    private fun normalizeFlashFilename(currentName: String, url: String, file: File): String {
+        val m = readMagicBytes(file, 4)
+        val isSwfMagic = m.size >= 3 &&
+            (m[0] == 'F'.code.toByte() || m[0] == 'C'.code.toByte() || m[0] == 'Z'.code.toByte()) &&
+            m[1] == 'W'.code.toByte() && m[2] == 'S'.code.toByte()
+        val isExeMagic = m.size >= 2 && m[0] == 'M'.code.toByte() && m[1] == 'Z'.code.toByte()
+        val pathLast = Uri.parse(url).lastPathSegment
+        val base = when {
+            currentName.endsWith(".swf", true) || currentName.endsWith(".exe", true) -> currentName
+            !pathLast.isNullOrBlank() && (pathLast.endsWith(".swf", true) || pathLast.endsWith(".exe", true)) -> pathLast
+            else -> currentName.substringBeforeLast('.').ifBlank { "flash_game" }
+        }
+        return when {
+            isSwfMagic && !base.endsWith(".swf", true) -> "${base.substringBeforeLast('.')}.swf"
+            isExeMagic && !base.endsWith(".exe", true) -> "${base.substringBeforeLast('.')}.exe"
+            !base.endsWith(".swf", true) && !base.endsWith(".exe", true) -> "$base.swf"
+            else -> base
+        }
+    }
+
+    private fun extractPlayableFromZip(zipFile: File, targetDir: File): Pair<String, File>? {
+        data class Candidate(val entryName: String, val tempOut: File, val priority: Int, val size: Long)
+        val candidates = mutableListOf<Candidate>()
+        try {
+            ZipInputStream(BufferedInputStream(FileInputStream(zipFile))).use { zis ->
+                var entry = zis.nextEntry
+                while (entry != null) {
+                    if (!entry.isDirectory) {
+                        val baseName = entry.name.substringAfterLast('/').ifBlank { entry.name }
+                        val lower = baseName.lowercase()
+                        val isSwf = lower.endsWith(".swf")
+                        val isExe = lower.endsWith(".exe")
+                        if (isSwf || isExe) {
+                            val isLoader = lower.contains("preloader") || lower.contains("loader") || lower.contains("intro")
+                            val priority = when {
+                                isSwf && !isLoader -> 0
+                                isSwf -> 1
+                                else -> 2
+                            }
+                            val safe = "${UUID.randomUUID()}_${baseName.replace(Regex("[^a-zA-Z0-9._-]"), "_")}"
+                            val dest = File(targetDir, safe)
+                            FileOutputStream(dest).use { out ->
+                                zis.copyTo(out, bufferSize = 16384)
+                            }
+                            candidates.add(Candidate(baseName, dest, priority, dest.length()))
+                        }
+                    }
+                    zis.closeEntry()
+                    entry = zis.nextEntry
+                }
+            }
+        } catch (_: Exception) {
+            candidates.forEach { it.tempOut.delete() }
+            return null
+        }
+
+        if (candidates.isEmpty()) return null
+        val best = candidates.minWith(compareBy<Candidate>({ it.priority }, { -it.size }))
+        candidates.forEach { if (it.tempOut != best.tempOut) it.tempOut.delete() }
+        return Pair(best.entryName, best.tempOut)
     }
 
     private fun updateSystemBars(fullscreen: Boolean) {
@@ -454,7 +656,10 @@ class MainActivity : ComponentActivity() {
         @JavascriptInterface
         fun downloadAndPlayUrl(url: String, suggestedName: String) {
             runOnUiThread {
-                downloadAndDeliverToFlashora(url, suggestedName)
+                val referer = Uri.parse(url).let { u ->
+                    if (!u.scheme.isNullOrBlank() && !u.host.isNullOrBlank()) "${u.scheme}://${u.host}/" else null
+                }
+                downloadAndDeliverToFlashora(url, suggestedName, referer)
             }
         }
     }
@@ -481,9 +686,12 @@ fun InAppFlashBrowserOverlay(
     isPageLoading: Boolean,
     isDownloadingGame: Boolean,
     detectedUrls: List<String>,
+    capturedCount: Int,
     onDismissDetected: () -> Unit,
     onWebViewCreated: (WebView) -> Unit,
     onUrlChanged: (String) -> Unit,
+    onPageNavigationStarted: () -> Unit,
+    onPassiveFlashUrlCaptured: (String) -> Unit,
     onLoadingChanged: (Boolean) -> Unit,
     onClose: () -> Unit,
     onSniffSwf: () -> Unit,
@@ -596,7 +804,11 @@ fun InAppFlashBrowserOverlay(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = stringResource(R.string.browser_sniff_swf),
+                        text = if (capturedCount > 0) {
+                            "${stringResource(R.string.browser_sniff_swf)} ($capturedCount)"
+                        } else {
+                            stringResource(R.string.browser_sniff_swf)
+                        },
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                     )
@@ -629,13 +841,21 @@ fun InAppFlashBrowserOverlay(
                             loadWithOverviewMode = true
                             builtInZoomControls = true
                             displayZoomControls = false
+                            javaScriptCanOpenWindowsAutomatically = true
+                            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                            userAgentString =
+                                "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
                         }
                         CookieManager.getInstance().setAcceptCookie(true)
+                        CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                         webViewClient = object : WebViewClient() {
                             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                                 super.onPageStarted(view, url, favicon)
                                 onLoadingChanged(true)
-                                if (url != null) onUrlChanged(url)
+                                if (url != null) {
+                                    onPageNavigationStarted()
+                                    onUrlChanged(url)
+                                }
                             }
 
                             override fun onPageFinished(view: WebView?, url: String?) {
@@ -644,13 +864,25 @@ fun InAppFlashBrowserOverlay(
                                 if (url != null) onUrlChanged(url)
                             }
 
+                            override fun shouldInterceptRequest(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                            ): WebResourceResponse? {
+                                val target = request?.url?.toString()
+                                val path = request?.url?.path?.lowercase() ?: ""
+                                if (target != null && (path.endsWith(".swf") || path.endsWith(".exe"))) {
+                                    onPassiveFlashUrlCaptured(target)
+                                }
+                                return super.shouldInterceptRequest(view, request)
+                            }
+
                             override fun shouldOverrideUrlLoading(
                                 view: WebView?,
                                 request: WebResourceRequest?,
                             ): Boolean {
                                 val target = request?.url?.toString() ?: return false
                                 val path = request.url.path?.lowercase() ?: ""
-                                if (path.endsWith(".swf") || path.endsWith(".exe")) {
+                                if (path.endsWith(".swf") || path.endsWith(".exe") || path.endsWith(".zip")) {
                                     onDownloadIntercepted(target, null, null)
                                     return true
                                 }
@@ -796,6 +1028,10 @@ fun FlashoraHostScreen(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
                     )
+                    isVerticalScrollBarEnabled = true
+                    isHorizontalScrollBarEnabled = false
+                    isNestedScrollingEnabled = true
+                    overScrollMode = android.view.View.OVER_SCROLL_IF_CONTENT_SCROLLS
                     setBackgroundColor(android.graphics.Color.parseColor("#0B0F1E"))
                     settings.apply {
                         javaScriptEnabled = true
