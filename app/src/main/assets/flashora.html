@@ -189,11 +189,13 @@
 
     /* ===== App Shell ===== */
     .app-shell {
+      width: 100%;
       max-width: 1120px;
       margin: 0 auto;
       min-height: 100%;
       padding: calc(14px + env(safe-area-inset-top)) 16px calc(168px + env(safe-area-inset-bottom));
       position: relative;
+      overflow-x: clip;
     }
 
     .top-header {
@@ -265,6 +267,8 @@
       -webkit-backdrop-filter: blur(16px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
       transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+      min-width: 0;
+      max-width: 100%;
     }
 
     .btn-primary {
@@ -371,6 +375,8 @@
       display: flex;
       align-items: center;
       width: 100%;
+      min-width: 0;
+      max-width: 100%;
     }
     .search-box svg {
       position: absolute;
@@ -380,6 +386,8 @@
     }
     .input-field {
       width: 100%;
+      min-width: 0;
+      max-width: 100%;
       min-height: 48px;
       border-radius: var(--radius);
       border: 1px solid var(--border);
@@ -401,6 +409,9 @@
     /* ===== Views & Tabs ===== */
     .tab-view {
       display: none;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
       animation: fadeSlideUp 260ms var(--transition);
     }
     .tab-view.active {
@@ -487,11 +498,14 @@
       padding-bottom: 6px;
       scrollbar-width: none;
       touch-action: pan-x pan-y;
+      max-width: 100%;
     }
     .h-scroll::-webkit-scrollbar { display: none; }
 
     .continue-card {
       flex: 0 0 165px;
+      min-width: 0;
+      overflow: hidden;
       padding: 10px;
       cursor: pointer;
     }
@@ -504,6 +518,8 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
+      width: 100%;
+      max-width: 100%;
     }
     @media (min-width: 640px) {
       .games-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
@@ -519,6 +535,8 @@
       gap: 9px;
       position: relative;
       overflow: hidden;
+      min-width: 0;
+      width: 100%;
     }
     .game-card:hover {
       border-color: rgba(0, 229, 255, 0.45);
@@ -602,28 +620,37 @@
       justify-content: space-between;
       gap: 6px;
       margin-top: 2px;
+      min-width: 0;
+      width: 100%;
+    }
+    .game-actions .icon-btn {
+      flex: 1 1 0;
+      max-width: 44px;
+      min-width: 34px;
+      height: 38px;
     }
 
     /* ===== Filter Chips & Sort ===== */
     .chips-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
-      overflow-x: auto;
       padding: 6px 0 12px;
-      scrollbar-width: none;
-      touch-action: pan-x pan-y;
+      width: 100%;
+      max-width: 100%;
     }
-    .chips-row::-webkit-scrollbar { display: none; }
     .chip {
       flex: 0 0 auto;
-      padding: 8px 14px;
+      max-width: 100%;
+      padding: 7px 13px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--surface-glass);
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
       transition: var(--transition);
     }
     .chip.active {
@@ -639,9 +666,12 @@
       gap: 10px;
       align-items: center;
       margin-bottom: 12px;
+      min-width: 0;
+      width: 100%;
     }
     .select-field {
       min-height: 44px;
+      max-width: 100%;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background: var(--surface-glass);
@@ -651,6 +681,14 @@
       font-weight: 700;
       outline: none;
     }
+    .select-field option {
+      background: #151B33;
+      color: #FFFFFF;
+    }
+    html[data-theme="light"] .select-field option {
+      background: #FFFFFF;
+      color: #0F172A;
+    }
 
     /* ===== Converter List ===== */
     .conv-item {
@@ -659,17 +697,23 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      min-width: 0;
+      width: 100%;
+      overflow: hidden;
     }
     .conv-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      min-width: 0;
+      width: 100%;
     }
     .conv-name {
       font-size: 15px;
       font-weight: 800;
-      word-break: break-all;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .status-badge {
       padding: 4px 10px;
@@ -732,6 +776,11 @@
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
+      min-width: 0;
+    }
+    .setting-label {
+      flex: 1 1 180px;
+      min-width: 0;
     }
     .setting-label strong {
       display: block;
@@ -773,6 +822,9 @@
       box-shadow: 0 10px 30px var(--primary-glow), 0 0 0 1px rgba(255,255,255,0.16);
       white-space: nowrap;
     }
+    .fab-open.fab-hidden {
+      display: none !important;
+    }
 
     .bottom-nav {
       position: fixed;
@@ -790,7 +842,7 @@
       -webkit-backdrop-filter: blur(20px);
       box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       padding: 6px 4px;
     }
     .nav-item {
@@ -807,8 +859,16 @@
       cursor: pointer;
       border-radius: 18px;
       transition: var(--transition);
+      min-width: 0;
       min-height: 48px;
       padding: 4px 2px;
+      overflow: hidden;
+    }
+    .nav-item span {
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .nav-item.active {
       color: var(--primary-a);
@@ -821,8 +881,10 @@
     /* ===== Sites & Online Archive ===== */
     .sites-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 12px;
+      width: 100%;
+      max-width: 100%;
     }
     @media (min-width: 680px) {
       .sites-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -833,6 +895,10 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 10px;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
     }
     .site-card:hover {
       border-color: rgba(0, 229, 255, 0.45);
@@ -843,6 +909,43 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 10px;
+      min-width: 0;
+      width: 100%;
+    }
+    .site-info {
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .site-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .site-url {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      direction: ltr;
+      unicode-bidi: embed;
+      text-align: left;
+      display: block;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    html[dir="rtl"] .site-url {
+      text-align: right;
+    }
+    .site-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .site-badge {
       padding: 4px 9px;
@@ -853,6 +956,10 @@
       color: var(--secondary);
       border: 1px solid rgba(0, 229, 255, 0.3);
       white-space: nowrap;
+      flex-shrink: 0;
+      max-width: 44%;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .site-badge.direct {
       background: rgba(16, 232, 138, 0.15);
@@ -865,6 +972,11 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      flex-wrap: wrap;
     }
 
     /* ===== Fullscreen Game Player ===== */
@@ -953,6 +1065,7 @@
       place-items: center;
       position: relative;
       overflow: hidden;
+      touch-action: none;
     }
     #ruffle-mount {
       width: 100%;
@@ -961,6 +1074,9 @@
       align-items: center;
       justify-content: center;
       transition: transform 280ms ease;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     #ruffle-mount.rotated-90 {
       transform: rotate(90deg);
@@ -971,6 +1087,8 @@
       width: 100%;
       height: 100%;
       display: block;
+      touch-action: none;
+      outline: none;
     }
     #ruffle-mount.scale-original ruffle-player {
       width: auto !important;
@@ -1039,6 +1157,29 @@
     }
     .as-notice-banner.visible { display: flex; }
 
+    /* Gamepad Virtual Pointer Reticle (Right Stick + R2 Click) */
+    #gp-virtual-cursor {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      margin-left: -12px;
+      margin-top: -12px;
+      border-radius: 50%;
+      border: 2px solid var(--secondary);
+      background: rgba(0, 229, 255, 0.18);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.65);
+      pointer-events: none;
+      z-index: 213;
+      display: none;
+      transform: translate3d(0, 0, 0);
+    }
+    #gp-virtual-cursor.active { display: block; }
+    #gp-virtual-cursor.clicking {
+      transform: scale(0.8);
+      background: rgba(255, 106, 0, 0.45);
+      border-color: var(--primary-a);
+    }
+
     /* ===== Virtual Touch Gamepad ===== */
     #virtual-pad {
       position: absolute;
@@ -1046,19 +1187,67 @@
       z-index: 212;
       pointer-events: none;
       display: none;
+      direction: ltr;
+      --vpad-scale: 1;
     }
     #virtual-pad.active { display: block; }
 
-    .vpad-joystick-zone {
+    .vpad-left-cluster {
       position: absolute;
       bottom: max(76px, calc(66px + env(safe-area-inset-bottom)));
-      left: 20px;
-      width: 136px;
-      height: 136px;
+      left: max(16px, env(safe-area-inset-left));
+      transform-origin: bottom left;
+      transform: scale(var(--vpad-scale));
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .vpad-right-cluster {
+      position: absolute;
+      bottom: max(76px, calc(66px + env(safe-area-inset-bottom)));
+      right: max(16px, env(safe-area-inset-right));
+      transform-origin: bottom right;
+      transform: scale(var(--vpad-scale));
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .vpad-shoulder-btn {
+      padding: 7px 18px;
+      min-width: 64px;
+      min-height: 36px;
+      border-radius: 12px;
+      background: rgba(21, 27, 51, 0.56);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      backdrop-filter: blur(6px);
+      pointer-events: auto;
+      touch-action: none;
+      user-select: none;
+    }
+    .vpad-shoulder-btn.pressed {
+      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
+      border-color: var(--secondary);
+      transform: scale(0.94);
+    }
+
+    .vpad-joystick-zone {
+      position: relative;
+      width: 138px;
+      height: 138px;
       border-radius: 50%;
-      background: rgba(21, 27, 51, 0.45);
-      border: 2px solid rgba(0, 229, 255, 0.35);
-      backdrop-filter: blur(4px);
+      background: radial-gradient(circle, rgba(21, 27, 51, 0.55) 45%, rgba(0, 229, 255, 0.14) 100%);
+      border: 2px solid rgba(0, 229, 255, 0.38);
+      backdrop-filter: blur(5px);
       pointer-events: auto;
       touch-action: none;
       display: grid;
@@ -1070,16 +1259,65 @@
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
       box-shadow: 0 0 18px var(--primary-glow);
-      border: 2px solid rgba(255, 255, 255, 0.65);
-      transition: transform 40ms linear;
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      transition: transform 30ms linear;
+      pointer-events: none;
+    }
+
+    .vpad-dpad-zone {
+      position: relative;
+      width: 144px;
+      height: 144px;
+      pointer-events: auto;
+      touch-action: none;
+      display: none;
+    }
+    #virtual-pad[data-stick="dpad"] .vpad-joystick-zone { display: none; }
+    #virtual-pad[data-stick="dpad"] .vpad-dpad-zone { display: block; }
+
+    .vpad-dkey {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: rgba(21, 27, 51, 0.62);
+      border: 1.8px solid rgba(0, 229, 255, 0.35);
+      color: #FFFFFF;
+      font-size: 16px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+      user-select: none;
+      transition: transform 70ms ease, background 70ms ease;
+    }
+    .vpad-dkey.pressed {
+      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
+      border-color: var(--secondary);
+      transform: scale(0.92);
+      box-shadow: 0 0 14px var(--secondary);
+    }
+    .vpad-dkey-up { top: 0; left: 48px; }
+    .vpad-dkey-down { bottom: 0; left: 48px; }
+    .vpad-dkey-left { top: 48px; left: 0; }
+    .vpad-dkey-right { top: 48px; right: 0; }
+    .vpad-dkey-center {
+      position: absolute;
+      top: 48px;
+      left: 48px;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(21, 27, 51, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      pointer-events: none;
     }
 
     .vpad-buttons-zone {
-      position: absolute;
-      bottom: max(76px, calc(66px + env(safe-area-inset-bottom)));
-      right: 20px;
-      width: 152px;
-      height: 152px;
+      position: relative;
+      width: 154px;
+      height: 154px;
       pointer-events: auto;
       touch-action: none;
     }
@@ -1088,16 +1326,25 @@
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      background: rgba(21, 27, 51, 0.58);
+      background: rgba(21, 27, 51, 0.6);
       border: 2px solid rgba(255, 255, 255, 0.35);
       color: #FFFFFF;
       font-weight: 800;
-      font-size: 15px;
-      display: grid;
-      place-items: center;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.05;
       backdrop-filter: blur(6px);
       user-select: none;
       touch-action: none;
+    }
+    .vpad-btn small {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--secondary);
+      opacity: 0.9;
     }
     .vpad-btn.pressed {
       background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
@@ -1105,32 +1352,55 @@
       transform: scale(0.92);
       box-shadow: 0 0 18px var(--secondary);
     }
-    .vpad-btn-y { top: 0; left: 50px; }
-    .vpad-btn-x { top: 50px; left: 0; }
-    .vpad-btn-b { top: 50px; right: 0; }
-    .vpad-btn-a { bottom: 0; left: 50px; border-color: var(--secondary); }
+    .vpad-btn-y { top: 0; left: 51px; }
+    .vpad-btn-x { top: 51px; left: 0; }
+    .vpad-btn-b { top: 51px; right: 0; }
+    .vpad-btn-a { bottom: 0; left: 51px; border-color: var(--secondary); }
 
     .vpad-mini-row {
       position: absolute;
-      bottom: max(224px, calc(214px + env(safe-area-inset-bottom)));
-      right: 22px;
+      top: max(68px, calc(60px + env(safe-area-inset-top)));
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       gap: 10px;
       pointer-events: auto;
     }
     .vpad-pill {
-      padding: 6px 12px;
+      padding: 6px 14px;
+      min-height: 32px;
       border-radius: 999px;
-      background: rgba(21, 27, 51, 0.55);
+      background: rgba(21, 27, 51, 0.56);
       border: 1px solid rgba(255, 255, 255, 0.28);
       color: #FFFFFF;
       font-size: 11px;
       font-weight: 800;
       touch-action: none;
+      user-select: none;
     }
     .vpad-pill.pressed {
       background: var(--secondary);
       color: #0B0F1E;
+    }
+
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .preset-pill {
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .preset-pill:hover, .preset-pill.active {
+      border-color: var(--secondary);
+      color: var(--secondary);
     }
 
     /* ===== Modals & Toasts ===== */
@@ -1657,8 +1927,8 @@
       </div>
 
       <div class="hud-controls-row">
-        <span id="gamepad-badge" style="display:none; font-size:11px; color:var(--secondary); font-weight:800; padding:4px 8px; border:1px solid var(--secondary); border-radius:999px;">Gamepad</span>
-        <button id="btn-player-vpad" class="icon-btn" type="button" title="Touch Controls">
+        <button id="gamepad-badge" type="button" style="display:none; font-size:11px; color:var(--secondary); background:rgba(0,229,255,0.12); font-weight:800; padding:5px 10px; border:1px solid var(--secondary); border-radius:999px; cursor:pointer; align-items:center; gap:4px;"></button>
+        <button id="btn-player-vpad" class="icon-btn" type="button" title="Touch Controls / Direct Touch">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/></svg>
         </button>
         <button id="btn-player-keymap" class="icon-btn" type="button" title="Customize Keys">
@@ -1679,6 +1949,7 @@
     <!-- Stage -->
     <div id="player-stage-wrap" class="player-stage-wrap">
       <div id="ruffle-mount"></div>
+      <div id="gp-virtual-cursor"></div>
 
       <!-- Loading Progress Overlay -->
       <div id="player-loader" class="player-loader">
@@ -1704,19 +1975,34 @@
       </div>
 
       <!-- Virtual Touch Gamepad -->
-      <div id="virtual-pad">
-        <div id="vpad-joystick" class="vpad-joystick-zone">
-          <div id="vpad-knob" class="vpad-stick-knob"></div>
-        </div>
+      <div id="virtual-pad" data-stick="joystick">
         <div class="vpad-mini-row">
-          <button class="vpad-pill" data-vkey="start" type="button">START</button>
           <button class="vpad-pill" data-vkey="esc" type="button">ESC</button>
+          <button class="vpad-pill" data-vkey="start" type="button">START</button>
         </div>
-        <div class="vpad-buttons-zone">
-          <button class="vpad-btn vpad-btn-y" data-vkey="y" type="button">Y</button>
-          <button class="vpad-btn vpad-btn-x" data-vkey="x" type="button">X</button>
-          <button class="vpad-btn vpad-btn-b" data-vkey="b" type="button">B</button>
-          <button class="vpad-btn vpad-btn-a" data-vkey="a" type="button">A</button>
+
+        <div class="vpad-left-cluster">
+          <button class="vpad-shoulder-btn" data-vkey="l1" type="button">L1</button>
+          <div id="vpad-joystick" class="vpad-joystick-zone">
+            <div id="vpad-knob" class="vpad-stick-knob"></div>
+          </div>
+          <div id="vpad-dpad" class="vpad-dpad-zone">
+            <div class="vpad-dkey-center"></div>
+            <div class="vpad-dkey vpad-dkey-up" data-dir="up">▲</div>
+            <div class="vpad-dkey vpad-dkey-down" data-dir="down">▼</div>
+            <div class="vpad-dkey vpad-dkey-left" data-dir="left">◀</div>
+            <div class="vpad-dkey vpad-dkey-right" data-dir="right">▶</div>
+          </div>
+        </div>
+
+        <div class="vpad-right-cluster">
+          <button class="vpad-shoulder-btn" data-vkey="r1" type="button">R1</button>
+          <div class="vpad-buttons-zone">
+            <button class="vpad-btn vpad-btn-y" data-vkey="y" type="button"><span>Y</span><small></small></button>
+            <button class="vpad-btn vpad-btn-x" data-vkey="x" type="button"><span>X</span><small></small></button>
+            <button class="vpad-btn vpad-btn-b" data-vkey="b" type="button"><span>B</span><small></small></button>
+            <button class="vpad-btn vpad-btn-a" data-vkey="a" type="button"><span>A</span><small></small></button>
+          </div>
         </div>
       </div>
     </div>
@@ -1776,12 +2062,31 @@
 
   <!-- Keymap Modal -->
   <div id="modal-keymap" class="modal-backdrop">
-    <div class="glass-card modal-card">
+    <div class="glass-card modal-card" style="max-height:86vh; overflow-y:auto;">
       <div class="modal-head">
         <h3 data-i18n="keymap_title">تخصيص أزرار التحكم اللمسية</h3>
         <button class="icon-btn" type="button" onclick="UI.closeModal('modal-keymap')">✕</button>
       </div>
+      <div>
+        <div style="font-size:12px; color:var(--text-muted); font-weight:700; margin-bottom:6px;" data-i18n="keymap_presets">قوالب سريعة للأزرار</div>
+        <div class="preset-pills" id="keymap-presets-row">
+          <button type="button" class="preset-pill" data-preset="arrows" data-i18n="preset_arrows">الأسهم + Space/Z/X</button>
+          <button type="button" class="preset-pill" data-preset="wasd" data-i18n="preset_wasd">WASD + Space/E/Q</button>
+          <button type="button" class="preset-pill" data-preset="fighting" data-i18n="preset_fighting">قتال 6 أزرار</button>
+        </div>
+      </div>
       <div id="keymap-list" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+      <div class="setting-row">
+        <span style="font-size:13px; font-weight:700;" data-i18n="vpad_stick_style">شكل أزرار الحركة</span>
+        <select id="vpad-stick-select" class="select-field" style="min-width:136px;">
+          <option value="joystick" data-i18n="vpad_stick_joy">عصا تحكم</option>
+          <option value="dpad" data-i18n="vpad_stick_dpad">أسهم (D-Pad)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span style="font-size:13px; font-weight:700;" data-i18n="vpad_scale">حجم الأزرار</span>
+        <input id="vpad-scale-range" type="range" min="75" max="130" value="100" class="vol-range" style="width:140px;" />
+      </div>
       <div class="setting-row">
         <span style="font-size:13px; font-weight:700;" data-i18n="vpad_opacity">شفافية الأزرار</span>
         <input id="vpad-opacity-range" type="range" min="25" max="100" value="80" class="vol-range" style="width:140px;" />
@@ -1988,8 +2293,20 @@
         edit_game: "تعديل اللعبة",
         cancel: "إلغاء",
         save: "حفظ",
-        keymap_title: "تخصيص أزرار التحكم اللمسية",
+        keymap_title: "تخصيص أزرار اللمس ويد التحكم",
+        keymap_presets: "قوالب سريعة للأزرار",
+        preset_arrows: "الأسهم + Space/Z/X",
+        preset_wasd: "WASD + Space/E/Q",
+        preset_fighting: "قتال 6 أزرار",
+        vpad_stick_style: "شكل أزرار الحركة",
+        vpad_stick_joy: "عصا تحكم",
+        vpad_stick_dpad: "أسهم (D-Pad)",
+        vpad_scale: "حجم الأزرار",
         vpad_opacity: "شفافية الأزرار",
+        gamepad_connected_msg: "تم توصيل يد التحكم",
+        gamepad_disconnected_msg: "تم فصل يد التحكم",
+        vpad_shown_msg: "تم تفعيل أزرار اللمس",
+        vpad_hidden_msg: "وضع اللمس المباشر على الشاشة",
         reset_default: "استعادة الافتراضي",
         done: "تم",
         help_title: "دليل Flashora السريع",
@@ -2131,8 +2448,20 @@
         edit_game: "Edit Game",
         cancel: "Cancel",
         save: "Save",
-        keymap_title: "Customize Touch Controls",
+        keymap_title: "Customize Touch & Gamepad Keys",
+        keymap_presets: "Quick Key Presets",
+        preset_arrows: "Arrows + Space/Z/X",
+        preset_wasd: "WASD + Space/E/Q",
+        preset_fighting: "6-Button Fighter",
+        vpad_stick_style: "Movement Pad Style",
+        vpad_stick_joy: "Analog Stick",
+        vpad_stick_dpad: "D-Pad Cross",
+        vpad_scale: "Buttons Size",
         vpad_opacity: "Buttons Opacity",
+        gamepad_connected_msg: "Gamepad connected",
+        gamepad_disconnected_msg: "Gamepad disconnected",
+        vpad_shown_msg: "Touch Gamepad Enabled",
+        vpad_hidden_msg: "Direct Screen Touch Mode",
         reset_default: "Reset Defaults",
         done: "Done",
         help_title: "Flashora Quick Guide",
@@ -2187,8 +2516,24 @@
       b: "KeyZ",
       x: "KeyX",
       y: "KeyC",
+      l1: "ShiftLeft",
+      r1: "KeyV",
       start: "Enter",
       esc: "Escape"
+    };
+
+    const KEYMAP_PRESETS = {
+      arrows: { ...DEFAULT_KEYMAP },
+      wasd: {
+        up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD",
+        a: "Space", b: "KeyE", x: "KeyQ", y: "KeyF",
+        l1: "ShiftLeft", r1: "KeyR", start: "Enter", esc: "Escape"
+      },
+      fighting: {
+        up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight",
+        a: "KeyZ", b: "KeyX", x: "KeyA", y: "KeyS",
+        l1: "ShiftLeft", r1: "ControlLeft", start: "Enter", esc: "Escape"
+      }
     };
 
     const AVAILABLE_KEYS = [
@@ -2206,8 +2551,21 @@
       { code: "KeyX", label: "X" },
       { code: "KeyC", label: "C" },
       { code: "KeyV", label: "V" },
+      { code: "KeyQ", label: "Q" },
+      { code: "KeyE", label: "E" },
+      { code: "KeyF", label: "F" },
+      { code: "KeyR", label: "R" },
+      { code: "KeyJ", label: "J" },
+      { code: "KeyK", label: "K" },
+      { code: "KeyL", label: "L" },
+      { code: "KeyU", label: "U" },
       { code: "ShiftLeft", label: "Shift" },
       { code: "ControlLeft", label: "Ctrl" },
+      { code: "Digit1", label: "1" },
+      { code: "Digit2", label: "2" },
+      { code: "Digit3", label: "3" },
+      { code: "Backspace", label: "Backspace" },
+      { code: "Tab", label: "Tab" },
       { code: "Escape", label: "Esc" }
     ];
 
@@ -2221,6 +2579,8 @@
         renderer: "auto",
         volume: 85,
         vpadMode: "auto",
+        vpadStickType: "joystick",
+        vpadScale: 100,
         vpadOpacity: 80,
         keyMap: { ...DEFAULT_KEYMAP }
       },
@@ -2251,7 +2611,14 @@
         html.dataset.theme = this.data.theme;
         html.dataset.accent = this.data.accent;
         const vp = document.getElementById("virtual-pad");
-        if (vp) vp.style.opacity = String(this.data.vpadOpacity / 100);
+        if (vp) {
+          vp.style.opacity = String(this.data.vpadOpacity / 100);
+          vp.style.setProperty("--vpad-scale", String((this.data.vpadScale || 100) / 100));
+          vp.setAttribute("data-stick", this.data.vpadStickType || "joystick");
+        }
+        if (typeof VirtualPad !== "undefined" && VirtualPad.refreshButtonLabels) {
+          VirtualPad.refreshButtonLabels();
+        }
       }
     };
 
@@ -2870,8 +3237,11 @@
 
         const overlay = document.getElementById("player-overlay");
         overlay.classList.add("open");
-        if (window.AndroidBridge && window.AndroidBridge.setFullscreen) {
-          try { window.AndroidBridge.setFullscreen(true); } catch (_) {}
+        if (window.AndroidBridge) {
+          try {
+            if (window.AndroidBridge.setFullscreen) window.AndroidBridge.setFullscreen(true);
+            if (window.AndroidBridge.setPlayerActive) window.AndroidBridge.setPlayerActive(true);
+          } catch (_) {}
         }
 
         const loader = document.getElementById("player-loader");
@@ -2954,6 +3324,8 @@
 
           await player.load(loadConfig);
           try { player.volume = this.muted ? 0 : vol; } catch (_) {}
+          this.focusPlayer();
+          setTimeout(() => this.focusPlayer(), 250);
 
           clearInterval(this.loadInterval);
           fill.style.width = "100%";
@@ -2980,6 +3352,23 @@
           this.showErrorPanel(errMsg);
           UI.toast(errMsg, "error");
         }
+      },
+
+      focusPlayer() {
+        if (window.AndroidBridge && window.AndroidBridge.focusWebView) {
+          try { window.AndroidBridge.focusWebView(); } catch (_) {}
+        }
+        try {
+          if (this.player) {
+            if (this.player.tabIndex < 0) this.player.tabIndex = 0;
+            this.player.focus({ preventScroll: true });
+            const canvas = this.getCanvas();
+            if (canvas) {
+              if (canvas.tabIndex < 0) canvas.tabIndex = 0;
+              canvas.focus({ preventScroll: true });
+            }
+          }
+        } catch (_) {}
       },
 
       getCanvas() {
@@ -3094,6 +3483,9 @@
         clearInterval(this.loadInterval);
         clearTimeout(this.hudTimer);
         this.hideErrorPanel();
+        if (typeof VirtualPad !== "undefined" && VirtualPad.releaseAll) {
+          VirtualPad.releaseAll();
+        }
         if (this.player) {
           try { if (typeof this.player.suspend === "function") this.player.suspend(); } catch (_) {}
         }
@@ -3103,10 +3495,11 @@
         if (document.fullscreenElement && document.exitFullscreen) {
           document.exitFullscreen().catch(() => {});
         }
-        if (window.AndroidBridge && window.AndroidBridge.setFullscreen) {
+        if (window.AndroidBridge) {
           try {
-            window.AndroidBridge.setFullscreen(false);
-            window.AndroidBridge.setOrientation("auto");
+            if (window.AndroidBridge.setPlayerActive) window.AndroidBridge.setPlayerActive(false);
+            if (window.AndroidBridge.setFullscreen) window.AndroidBridge.setFullscreen(false);
+            if (window.AndroidBridge.setOrientation) window.AndroidBridge.setOrientation("auto");
           } catch (_) {}
         }
         UI.refreshLists();
@@ -3131,26 +3524,70 @@
     };
 
     /* =========================================================================
-       9. VIRTUAL TOUCH CONTROLLER & GAMEPAD API
+       9. VIRTUAL TOUCH CONTROLLER, DIRECT STAGE TOUCH & GAMEPAD ENGINE
        ========================================================================= */
     const VirtualPad = {
       activeKeys: new Set(),
       gpButtonsPrev: {},
+      nativeState: null,
+      nativeGamepadCount: 0,
+      nativeGamepadNames: [],
+      cursorX: 0.5,
+      cursorY: 0.5,
+      cursorActive: false,
+      cursorClickDown: false,
+      lastRuffleCursorMoveTs: 0,
 
       keyToKeyCode(code) {
         const map = {
           ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40,
-          Enter: 13, Escape: 27, Space: 32, ShiftLeft: 16, ControlLeft: 17
+          Enter: 13, Escape: 27, Space: 32, ShiftLeft: 16, ControlLeft: 17,
+          Backspace: 8, Tab: 9
         };
         if (map[code]) return map[code];
-        if (code.startsWith("Key")) return code.charCodeAt(3);
+        if (code && code.startsWith("Key")) return code.charCodeAt(3);
+        if (code && code.startsWith("Digit")) return code.charCodeAt(5);
         return 32;
       },
 
       keyToKeyName(code) {
-        if (code === "Space") return " ";
-        if (code.startsWith("Key")) return code.slice(3).toLowerCase();
+        const map = {
+          Space: " ",
+          ShiftLeft: "Shift",
+          ControlLeft: "Control",
+          Enter: "Enter",
+          Escape: "Escape",
+          Backspace: "Backspace",
+          Tab: "Tab",
+          ArrowUp: "ArrowUp",
+          ArrowDown: "ArrowDown",
+          ArrowLeft: "ArrowLeft",
+          ArrowRight: "ArrowRight"
+        };
+        if (map[code]) return map[code];
+        if (code && code.startsWith("Key")) return code.slice(3).toLowerCase();
+        if (code && code.startsWith("Digit")) return code.slice(5);
         return code;
+      },
+
+      keyToLocation(code) {
+        if (code === "ShiftLeft" || code === "ControlLeft") return 1;
+        return 0;
+      },
+
+      shortKeyLabel(code) {
+        const found = AVAILABLE_KEYS.find((k) => k.code === code);
+        return found ? found.label.replace(/^[↑↓←→]\s*/, "") : code;
+      },
+
+      refreshButtonLabels() {
+        const km = Settings.data.keyMap;
+        document.querySelectorAll(".vpad-btn[data-vkey]").forEach((btn) => {
+          const small = btn.querySelector("small");
+          if (small && km[btn.dataset.vkey]) {
+            small.textContent = this.shortKeyLabel(km[btn.dataset.vkey]);
+          }
+        });
       },
 
       emitKey(code, isDown) {
@@ -3161,32 +3598,127 @@
         if (isDown) this.activeKeys.add(code);
         else this.activeKeys.delete(code);
 
+        if (isDown && RuffleEngine.player) {
+          RuffleEngine.focusPlayer();
+        }
+
         const kc = this.keyToKeyCode(code);
         const ev = new KeyboardEvent(isDown ? "keydown" : "keyup", {
           key: this.keyToKeyName(code),
           code,
           keyCode: kc,
           which: kc,
+          location: this.keyToLocation(code),
           bubbles: true,
-          cancelable: true
+          cancelable: true,
+          composed: true
         });
-        window.dispatchEvent(ev);
-        document.dispatchEvent(ev);
-        if (RuffleEngine.player) {
-          try { RuffleEngine.player.dispatchEvent(ev); } catch (_) {}
+        const target = RuffleEngine.getCanvas() || RuffleEngine.player || document;
+        try {
+          target.dispatchEvent(ev);
+        } catch (_) {
+          document.dispatchEvent(ev);
         }
+      },
+
+      releaseAll() {
+        const pressed = Array.from(this.activeKeys);
+        pressed.forEach((code) => this.emitKey(code, false));
+        this.gpButtonsPrev = {};
+        if (this.cursorClickDown) {
+          this.dispatchMouseAtCursor("mouseup", 0);
+          this.cursorClickDown = false;
+        }
+        document.querySelectorAll("[data-vkey].pressed, .vpad-dkey.pressed").forEach((el) => {
+          el.classList.remove("pressed");
+        });
+        const knob = document.getElementById("vpad-knob");
+        if (knob) knob.style.transform = "translate(0px, 0px)";
+      },
+
+      dispatchMouseToCanvas(type, clientX, clientY, buttons = 0) {
+        const target = RuffleEngine.getCanvas() || RuffleEngine.player;
+        if (!target) return;
+        try {
+          target.dispatchEvent(new MouseEvent(type, {
+            clientX,
+            clientY,
+            button: 0,
+            buttons,
+            bubbles: true,
+            cancelable: true,
+            composed: true
+          }));
+        } catch (_) {}
+      },
+
+      dispatchMouseAtCursor(type, buttons = 0) {
+        const wrap = document.getElementById("player-stage-wrap");
+        if (!wrap) return;
+        const rect = wrap.getBoundingClientRect();
+        const cx = rect.left + this.cursorX * rect.width;
+        const cy = rect.top + this.cursorY * rect.height;
+        this.dispatchMouseToCanvas(type, cx, cy, buttons);
       },
 
       syncVisibility() {
         const mode = Settings.data.vpadMode;
         const isTouch = ("ontouchstart" in window) || navigator.maxTouchPoints > 0;
         const show = mode === "always" || (mode === "auto" && isTouch);
-        document.getElementById("virtual-pad").classList.toggle("active", show);
+        const vp = document.getElementById("virtual-pad");
+        vp.classList.toggle("active", show);
+        vp.setAttribute("data-stick", Settings.data.vpadStickType || "joystick");
+        vp.style.setProperty("--vpad-scale", String((Settings.data.vpadScale || 100) / 100));
+        vp.style.opacity = String((Settings.data.vpadOpacity || 80) / 100);
         document.getElementById("btn-player-vpad").classList.toggle("active", show);
+        this.refreshButtonLabels();
+      },
+
+      updateGamepadBadge(hasWebGp) {
+        const badge = document.getElementById("gamepad-badge");
+        if (!badge) return;
+        const active = hasWebGp || this.nativeGamepadCount > 0;
+        if (active) {
+          badge.style.display = "inline-flex";
+          const label = this.nativeGamepadNames[0]
+            ? (this.nativeGamepadCount > 1 ? `🎮 ×${this.nativeGamepadCount}` : `🎮 ${this.nativeGamepadNames[0].slice(0, 14)}`)
+            : "🎮 Gamepad";
+          badge.textContent = label;
+        } else {
+          badge.style.display = "none";
+        }
       },
 
       init() {
-        // Multi-touch joystick
+        this.refreshButtonLabels();
+
+        // Direct Stage Touch Enhancement (focus & pointer tracking for mouse Flash games)
+        const stageMount = document.getElementById("ruffle-mount");
+        let stageTouchId = null;
+        stageMount.addEventListener("pointerdown", (e) => {
+          RuffleEngine.unlockAudio();
+          RuffleEngine.focusPlayer();
+          if (e.pointerType === "touch") {
+            stageTouchId = e.pointerId;
+            this.dispatchMouseToCanvas("mousemove", e.clientX, e.clientY, 0);
+          }
+        }, { passive: true });
+        stageMount.addEventListener("pointermove", (e) => {
+          if (e.pointerType === "touch" && e.pointerId === stageTouchId) {
+            const now = performance.now();
+            if (now - this.lastRuffleCursorMoveTs > 16) {
+              this.lastRuffleCursorMoveTs = now;
+              this.dispatchMouseToCanvas("mousemove", e.clientX, e.clientY, 1);
+            }
+          }
+        }, { passive: true });
+        const endStageTouch = (e) => {
+          if (e.pointerId === stageTouchId) stageTouchId = null;
+        };
+        stageMount.addEventListener("pointerup", endStageTouch, { passive: true });
+        stageMount.addEventListener("pointercancel", endStageTouch, { passive: true });
+
+        // Multi-touch analog joystick
         const joy = document.getElementById("vpad-joystick");
         const knob = document.getElementById("vpad-knob");
         let joyTouchId = null;
@@ -3203,9 +3735,10 @@
             dx = (dx / dist) * maxR;
             dy = (dy / dist) * maxR;
           }
-          knob.style.transform = `translate(${dx}px, ${dy}px)`;
+          const scaleFactor = (Settings.data.vpadScale || 100) / 100 || 1;
+          knob.style.transform = `translate(${dx / scaleFactor}px, ${dy / scaleFactor}px)`;
           const km = Settings.data.keyMap;
-          const dead = maxR * 0.32;
+          const dead = maxR * 0.28;
           this.emitKey(km.left, dx < -dead);
           this.emitKey(km.right, dx > dead);
           this.emitKey(km.up, dy < -dead);
@@ -3223,68 +3756,236 @@
 
         joy.addEventListener("pointerdown", (e) => {
           e.preventDefault();
+          e.stopPropagation();
           joy.setPointerCapture(e.pointerId);
           joyTouchId = e.pointerId;
           updateStick(e.clientX, e.clientY);
         });
         joy.addEventListener("pointermove", (e) => {
-          if (e.pointerId === joyTouchId) updateStick(e.clientX, e.clientY);
+          if (e.pointerId === joyTouchId) {
+            e.preventDefault();
+            updateStick(e.clientX, e.clientY);
+          }
         });
         joy.addEventListener("pointerup", (e) => {
           if (e.pointerId === joyTouchId) resetStick();
         });
         joy.addEventListener("pointercancel", resetStick);
 
-        // Action buttons
+        // Multi-touch D-Pad Cross (sliding finger supports diagonals smoothly)
+        const dpad = document.getElementById("vpad-dpad");
+        let dpadTouchId = null;
+        const setDpadClasses = (l, r, u, d) => {
+          dpad.querySelector(".vpad-dkey-left").classList.toggle("pressed", l);
+          dpad.querySelector(".vpad-dkey-right").classList.toggle("pressed", r);
+          dpad.querySelector(".vpad-dkey-up").classList.toggle("pressed", u);
+          dpad.querySelector(".vpad-dkey-down").classList.toggle("pressed", d);
+        };
+        const updateDpad = (clientX, clientY) => {
+          const rect = dpad.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dead = rect.width * 0.14;
+          const dx = clientX - cx;
+          const dy = clientY - cy;
+          const l = dx < -dead, r = dx > dead, u = dy < -dead, d = dy > dead;
+          setDpadClasses(l, r, u, d);
+          const km = Settings.data.keyMap;
+          this.emitKey(km.left, l);
+          this.emitKey(km.right, r);
+          this.emitKey(km.up, u);
+          this.emitKey(km.down, d);
+        };
+        const resetDpad = () => {
+          dpadTouchId = null;
+          setDpadClasses(false, false, false, false);
+          const km = Settings.data.keyMap;
+          this.emitKey(km.left, false);
+          this.emitKey(km.right, false);
+          this.emitKey(km.up, false);
+          this.emitKey(km.down, false);
+        };
+        dpad.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dpad.setPointerCapture(e.pointerId);
+          dpadTouchId = e.pointerId;
+          updateDpad(e.clientX, e.clientY);
+        });
+        dpad.addEventListener("pointermove", (e) => {
+          if (e.pointerId === dpadTouchId) {
+            e.preventDefault();
+            updateDpad(e.clientX, e.clientY);
+          }
+        });
+        dpad.addEventListener("pointerup", (e) => {
+          if (e.pointerId === dpadTouchId) resetDpad();
+        });
+        dpad.addEventListener("pointercancel", resetDpad);
+
+        // Action & Shoulder buttons with proper multi-touch pointer capture
         document.querySelectorAll("[data-vkey]").forEach((btn) => {
           const vkey = btn.dataset.vkey;
+          let activePointer = null;
           const press = (e) => {
             e.preventDefault();
-            btn.classList.add("pressed");
-            this.emitKey(Settings.data.keyMap[vkey], true);
+            e.stopPropagation();
+            if (activePointer === null) {
+              activePointer = e.pointerId;
+              try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+              btn.classList.add("pressed");
+              this.emitKey(Settings.data.keyMap[vkey], true);
+            }
           };
           const release = (e) => {
-            e.preventDefault();
-            btn.classList.remove("pressed");
-            this.emitKey(Settings.data.keyMap[vkey], false);
+            if (activePointer !== null && (e.pointerId === activePointer || e.type === "pointercancel")) {
+              e.preventDefault();
+              activePointer = null;
+              btn.classList.remove("pressed");
+              this.emitKey(Settings.data.keyMap[vkey], false);
+            }
           };
           btn.addEventListener("pointerdown", press);
           btn.addEventListener("pointerup", release);
           btn.addEventListener("pointercancel", release);
-          btn.addEventListener("pointerleave", release);
         });
 
-        // Gamepad API polling loop
+        // HTML5 Gamepad Connection Events
+        window.addEventListener("gamepadconnected", (e) => {
+          const name = (e.gamepad && e.gamepad.id) ? e.gamepad.id.split("(")[0].trim() : "Gamepad";
+          UI.toast(`${t("gamepad_connected_msg")}: ${name}`, "success");
+          this.updateGamepadBadge(true);
+        });
+        window.addEventListener("gamepaddisconnected", () => {
+          this.releaseAll();
+          UI.toast(t("gamepad_disconnected_msg"), "info");
+          this.updateGamepadBadge(false);
+        });
+        window.addEventListener("blur", () => this.releaseAll());
+
+        // Native Android Controller Bridge Hooks
+        window.onNativeGamepadConnection = (count, names) => {
+          const prev = this.nativeGamepadCount;
+          this.nativeGamepadCount = Number(count) || 0;
+          this.nativeGamepadNames = Array.isArray(names) ? names : [];
+          if (this.nativeGamepadCount > prev) {
+            const label = this.nativeGamepadNames[0] || "Gamepad";
+            UI.toast(`${t("gamepad_connected_msg")}: ${label}`, "success");
+          } else if (this.nativeGamepadCount === 0 && prev > 0) {
+            this.nativeState = null;
+            this.releaseAll();
+            UI.toast(t("gamepad_disconnected_msg"), "info");
+          }
+          this.updateGamepadBadge(false);
+        };
+
+        window.onNativeGamepadState = (state) => {
+          this.nativeState = state && state.connected ? state : null;
+        };
+
+        if (window.AndroidBridge && window.AndroidBridge.getConnectedGamepadsJson) {
+          try {
+            const names = JSON.parse(window.AndroidBridge.getConnectedGamepadsJson() || "[]");
+            if (names.length) {
+              this.nativeGamepadCount = names.length;
+              this.nativeGamepadNames = names;
+              this.updateGamepadBadge(false);
+            }
+          } catch (_) {}
+        }
+
+        // Combined Gamepad Polling Loop (Web Gamepad API + Native Android Controller + Right Stick Virtual Cursor)
         const pollGamepad = () => {
-          if (RuffleEngine.player && navigator.getGamepads) {
-            const gps = navigator.getGamepads();
-            const gp = gps && Array.from(gps).find(Boolean);
-            const badge = document.getElementById("gamepad-badge");
+          if (RuffleEngine.player && !RuffleEngine.paused) {
+            const gps = navigator.getGamepads ? navigator.getGamepads() : null;
+            const gp = gps && Array.from(gps).find((g) => g && g.connected);
+            this.updateGamepadBadge(Boolean(gp));
+
+            const webState = {};
+            let rx = 0, ry = 0, r2Click = false;
+
             if (gp) {
-              badge.style.display = "inline-block";
-              const km = Settings.data.keyMap;
               const axX = gp.axes[0] || 0;
               const axY = gp.axes[1] || 0;
-              const btnState = {
-                left: axX < -0.45 || (gp.buttons[14] && gp.buttons[14].pressed),
-                right: axX > 0.45 || (gp.buttons[15] && gp.buttons[15].pressed),
-                up: axY < -0.45 || (gp.buttons[12] && gp.buttons[12].pressed),
-                down: axY > 0.45 || (gp.buttons[13] && gp.buttons[13].pressed),
-                a: Boolean(gp.buttons[0] && gp.buttons[0].pressed),
-                b: Boolean(gp.buttons[1] && gp.buttons[1].pressed),
-                x: Boolean(gp.buttons[2] && gp.buttons[2].pressed),
-                y: Boolean(gp.buttons[3] && gp.buttons[3].pressed),
-                start: Boolean(gp.buttons[9] && gp.buttons[9].pressed),
-                esc: Boolean(gp.buttons[8] && gp.buttons[8].pressed)
-              };
-              for (const k of Object.keys(btnState)) {
-                if (btnState[k] !== this.gpButtonsPrev[k]) {
-                  this.emitKey(km[k], btnState[k]);
-                  this.gpButtonsPrev[k] = btnState[k];
+              // Some Android HID gamepads report D-pad on axes[9] hat switch (-1..+1)
+              let hatL = false, hatR = false, hatU = false, hatD = false;
+              if (gp.axes.length >= 10 && Math.abs(gp.axes[9]) <= 1.05) {
+                const h = gp.axes[9];
+                if (h < 1.1) {
+                  hatU = h <= -0.85 || h >= 0.85;
+                  hatR = h >= -0.80 && h <= -0.10;
+                  hatD = h >= -0.05 && h <= 0.45;
+                  hatL = h >= 0.48 && h <= 0.88;
                 }
               }
+              webState.left = axX < -0.42 || hatL || Boolean(gp.buttons[14] && gp.buttons[14].pressed);
+              webState.right = axX > 0.42 || hatR || Boolean(gp.buttons[15] && gp.buttons[15].pressed);
+              webState.up = axY < -0.42 || hatU || Boolean(gp.buttons[12] && gp.buttons[12].pressed);
+              webState.down = axY > 0.42 || hatD || Boolean(gp.buttons[13] && gp.buttons[13].pressed);
+              webState.a = Boolean(gp.buttons[0] && gp.buttons[0].pressed);
+              webState.b = Boolean(gp.buttons[1] && gp.buttons[1].pressed);
+              webState.x = Boolean(gp.buttons[2] && gp.buttons[2].pressed);
+              webState.y = Boolean(gp.buttons[3] && gp.buttons[3].pressed);
+              webState.l1 = Boolean(gp.buttons[4] && gp.buttons[4].pressed);
+              webState.r1 = Boolean(gp.buttons[5] && gp.buttons[5].pressed);
+              webState.start = Boolean(gp.buttons[9] && gp.buttons[9].pressed);
+              webState.esc = Boolean(gp.buttons[8] && gp.buttons[8].pressed);
+              if (gp.axes.length >= 4) {
+                if (Math.abs(gp.axes[2]) > 0.22) rx = gp.axes[2];
+                if (Math.abs(gp.axes[3]) > 0.22) ry = gp.axes[3];
+              }
+              r2Click = Boolean(gp.buttons[7] && (gp.buttons[7].pressed || gp.buttons[7].value > 0.45));
+            }
+
+            const nat = this.nativeState;
+            if (nat) {
+              if (Math.abs(nat.rx || 0) > 0.22) rx = nat.rx;
+              if (Math.abs(nat.ry || 0) > 0.22) ry = nat.ry;
+              if (nat.r2) r2Click = true;
+            }
+
+            if (gp || nat) {
+              const km = Settings.data.keyMap;
+              const slots = ["left", "right", "up", "down", "a", "b", "x", "y", "l1", "r1", "start", "esc"];
+              for (const s of slots) {
+                const pressed = Boolean(webState[s] || (nat && nat[s]));
+                if (pressed !== Boolean(this.gpButtonsPrev[s])) {
+                  this.emitKey(km[s], pressed);
+                  this.gpButtonsPrev[s] = pressed;
+                }
+              }
+
+              // Right-Stick Virtual Aim Cursor + R2 Trigger Click for mouse-driven Flash games
+              const cursorEl = document.getElementById("gp-virtual-cursor");
+              if (Math.abs(rx) > 0.22 || Math.abs(ry) > 0.22) {
+                this.cursorActive = true;
+                this.cursorX = Math.max(0.02, Math.min(0.98, this.cursorX + rx * 0.015));
+                this.cursorY = Math.max(0.02, Math.min(0.98, this.cursorY + ry * 0.015));
+                const wrap = document.getElementById("player-stage-wrap");
+                if (cursorEl && wrap) {
+                  cursorEl.style.left = (this.cursorX * 100) + "%";
+                  cursorEl.style.top = (this.cursorY * 100) + "%";
+                  cursorEl.classList.add("active");
+                }
+                this.dispatchMouseAtCursor("mousemove", this.cursorClickDown ? 1 : 0);
+              }
+              if (r2Click !== this.cursorClickDown) {
+                this.cursorClickDown = r2Click;
+                if (cursorEl) {
+                  cursorEl.classList.add("active");
+                  cursorEl.style.left = (this.cursorX * 100) + "%";
+                  cursorEl.style.top = (this.cursorY * 100) + "%";
+                  cursorEl.classList.toggle("clicking", r2Click);
+                }
+                this.dispatchMouseAtCursor(r2Click ? "mousedown" : "mouseup", r2Click ? 1 : 0);
+                if (!r2Click) this.dispatchMouseAtCursor("click", 0);
+              }
             } else {
-              badge.style.display = "none";
+              const cursorEl = document.getElementById("gp-virtual-cursor");
+              if (cursorEl && this.cursorActive) {
+                this.cursorActive = false;
+                cursorEl.classList.remove("active");
+              }
             }
           }
           requestAnimationFrame(pollGamepad);
@@ -3381,7 +4082,7 @@
           return `
             <div class="glass-card conv-item">
               <div class="conv-top">
-                <div>
+                <div style="flex:1 1 0; min-width:0; overflow:hidden;">
                   <div class="conv-name">${escapeHtml(item.swfName)}</div>
                   <div style="font-size:11.5px; color:var(--secondary); font-weight:700;">${escapeHtml(item.method)}</div>
                 </div>
@@ -3766,6 +4467,10 @@
             s.url.toLowerCase().includes(q)
           );
         }
+        if (!list.length) {
+          grid.innerHTML = `<div class="glass-card empty-state" style="grid-column: 1 / -1;"><strong>${t("empty_lib_title")}</strong><span>${t("empty_lib_sub")}</span></div>`;
+          return;
+        }
         grid.innerHTML = list.map((s) => {
           const badge = isAr ? (s.badgeAr || "موقع") : (s.badgeEn || "Site");
           const desc = isAr ? (s.descAr || s.url) : (s.descEn || s.url);
@@ -3775,15 +4480,15 @@
           return `
             <div class="glass-card site-card">
               <div class="site-header">
-                <div style="min-width:0;">
-                  <div style="font-size:15px; font-weight:800;">${escapeHtml(s.name)}</div>
-                  <div style="font-size:11.5px; color:var(--text-muted); direction:ltr; text-align:start; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.url)}</div>
+                <div class="site-info">
+                  <div class="site-title">${escapeHtml(s.name)}</div>
+                  <div class="site-url">${escapeHtml(s.url)}</div>
                 </div>
                 <span class="site-badge ${s.direct ? "direct" : ""}">${escapeHtml(badge)}</span>
               </div>
-              <div style="font-size:13px; color:var(--text-muted); line-height:1.55;">${escapeHtml(desc)}</div>
-              <div style="display:flex; gap:8px; align-items:center; justify-content:space-between;">
-                <button class="btn-primary" style="flex:1; min-height:42px; padding:8px 14px; font-size:13px;" type="button" onclick="SitesDirectory.openSite('${escapeHtml(s.url)}')">
+              <div class="site-desc">${escapeHtml(desc)}</div>
+              <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; min-width:0;">
+                <button class="btn-primary" style="flex:1; min-width:0; min-height:42px; padding:8px 14px; font-size:13px;" type="button" onclick="SitesDirectory.openSite('${escapeHtml(s.url)}')">
                   ${t("browse_download")}
                 </button>
                 ${delBtn}
@@ -3825,7 +4530,7 @@
           }
           box.innerHTML = docs.map((d) => `
             <div class="glass-card archive-card">
-              <div style="min-width:0;">
+              <div style="flex:1 1 180px; min-width:0; overflow:hidden;">
                 <div style="font-size:14px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.title || d.identifier)}</div>
                 <div style="font-size:11.5px; color:var(--text-muted);">archive.org • ${d.downloads ? d.downloads.toLocaleString() + " ↓" : "SWF"}</div>
               </div>
@@ -3942,6 +4647,8 @@
         this.activeTab = tab;
         document.querySelectorAll(".tab-view").forEach((el) => el.classList.toggle("active", el.id === "view-" + tab));
         document.querySelectorAll(".nav-item").forEach((el) => el.classList.toggle("active", el.dataset.tab === tab));
+        const fab = document.getElementById("fab-open-game");
+        if (fab) fab.classList.toggle("fab-hidden", tab !== "home" && tab !== "library");
         const sc = document.getElementById("app-scroll");
         if (sc) sc.scrollTop = 0;
         if (tab === "sites" && !SitesDirectory.archiveItems.length && !SitesDirectory.archiveBusy) {
@@ -3978,6 +4685,10 @@
         document.getElementById("set-volume-val").textContent = Settings.data.volume + "%";
         document.getElementById("set-vpad").value = Settings.data.vpadMode;
         document.getElementById("vpad-opacity-range").value = Settings.data.vpadOpacity;
+        const stickSel = document.getElementById("vpad-stick-select");
+        if (stickSel) stickSel.value = Settings.data.vpadStickType || "joystick";
+        const scaleRng = document.getElementById("vpad-scale-range");
+        if (scaleRng) scaleRng.value = Settings.data.vpadScale || 100;
         document.querySelectorAll(".accent-dot").forEach((d) => {
           d.classList.toggle("active", d.dataset.accent === Settings.data.accent);
         });
@@ -4219,7 +4930,7 @@
         const labels = {
           up: "↑ Up", down: "↓ Down", left: "← Left", right: "→ Right",
           a: "Button A", b: "Button B", x: "Button X", y: "Button Y",
-          start: "START", esc: "ESC"
+          l1: "Shoulder L1", r1: "Shoulder R1", start: "START", esc: "ESC"
         };
         list.innerHTML = Object.keys(labels).map((slot) => `
           <div style="display:flex; flex-direction:column; gap:4px;">
@@ -4235,6 +4946,9 @@
             Settings.save();
           });
         });
+        document.getElementById("vpad-stick-select").value = Settings.data.vpadStickType || "joystick";
+        document.getElementById("vpad-scale-range").value = Settings.data.vpadScale || 100;
+        document.getElementById("vpad-opacity-range").value = Settings.data.vpadOpacity || 80;
         this.openModal("modal-keymap");
       },
 
@@ -4430,10 +5144,28 @@
         document.getElementById("vpad-opacity-range").addEventListener("input", (e) => {
           Settings.data.vpadOpacity = Number(e.target.value); Settings.save();
         });
+        document.getElementById("vpad-scale-range").addEventListener("input", (e) => {
+          Settings.data.vpadScale = Number(e.target.value); Settings.save();
+        });
+        document.getElementById("vpad-stick-select").addEventListener("change", (e) => {
+          Settings.data.vpadStickType = e.target.value; Settings.save();
+        });
+        document.querySelectorAll("#keymap-presets-row .preset-pill").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const p = KEYMAP_PRESETS[btn.dataset.preset];
+            if (p) {
+              Settings.data.keyMap = { ...p };
+              Settings.save();
+              this.openKeymapModal();
+            }
+          });
+        });
         document.getElementById("btn-open-keymap-settings").addEventListener("click", () => this.openKeymapModal());
         document.getElementById("btn-reset-keymap").addEventListener("click", () => {
           Settings.data.keyMap = { ...DEFAULT_KEYMAP };
           Settings.data.vpadOpacity = 80;
+          Settings.data.vpadScale = 100;
+          Settings.data.vpadStickType = "joystick";
           Settings.save();
           this.openKeymapModal();
         });
@@ -4471,11 +5203,14 @@
         document.getElementById("btn-player-rotate").addEventListener("click", () => RuffleEngine.toggleRotate());
         document.getElementById("btn-player-fullscreen").addEventListener("click", () => RuffleEngine.toggleFullscreen());
         document.getElementById("btn-player-keymap").addEventListener("click", () => this.openKeymapModal());
+        document.getElementById("gamepad-badge").addEventListener("click", () => this.openKeymapModal());
         document.getElementById("btn-player-vpad").addEventListener("click", () => {
           const vp = document.getElementById("virtual-pad");
           const next = !vp.classList.contains("active");
+          if (!next) VirtualPad.releaseAll();
           vp.classList.toggle("active", next);
           document.getElementById("btn-player-vpad").classList.toggle("active", next);
+          UI.toast(next ? t("vpad_shown_msg") : t("vpad_hidden_msg"), "info");
         });
         document.getElementById("btn-player-mute").addEventListener("click", () => {
           RuffleEngine.muted = !RuffleEngine.muted;

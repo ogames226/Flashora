@@ -1,10 +1,18 @@
 package com.example
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.ActivityInfo
+import android.hardware.input.InputManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Base64
+import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
@@ -17,6 +25,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import kotlin.math.abs
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -120,12 +129,31 @@ class MainActivity : ComponentActivity() {
 
     private var isPageLoaded by mutableStateOf(false)
     private var isFullscreenMode by mutableStateOf(false)
+    private var isPlayerActive by mutableStateOf(false)
     private var activeBrowserUrl by mutableStateOf<String?>(null)
     private var browserCurrentUrl by mutableStateOf("")
     private var browserPageLoading by mutableStateOf(false)
     private var isDownloadingGame by mutableStateOf(false)
     private var detectedFlashUrls by mutableStateOf<List<String>>(emptyList())
     private var capturedPageFlashUrls by mutableStateOf<List<String>>(emptyList())
+
+    private var inputManager: InputManager? = null
+    private val nativeGamepadKeys = mutableMapOf<String, Boolean>()
+    private var nativeStickLeftX = 0f
+    private var nativeStickLeftY = 0f
+    private var nativeStickRightX = 0f
+    private var nativeStickRightY = 0f
+    private var nativeTriggerLeft = 0f
+    private var nativeTriggerRight = 0f
+    private var nativeHatX = 0f
+    private var nativeHatY = 0f
+    private var lastSentGamepadPayload = ""
+
+    private val inputDeviceListener = object : InputManager.InputDeviceListener {
+        override fun onInputDeviceAdded(deviceId: Int) = notifyJsConnectedGamepads()
+        override fun onInputDeviceRemoved(deviceId: Int) = notifyJsConnectedGamepads()
+        override fun onInputDeviceChanged(deviceId: Int) = notifyJsConnectedGamepads()
+    }
 
     private val incomingGamesDir: File by lazy {
         File(cacheDir, "incoming_games").apply { mkdirs() }
@@ -164,6 +192,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        inputManager = (getSystemService(Context.INPUT_SERVICE) as? InputManager)?.also { mgr ->
+            mgr.registerInputDeviceListener(inputDeviceListener, Handler(Looper.getMainLooper()))
+        }
 
         setContent {
             FlashoraTheme {
@@ -196,7 +227,10 @@ class MainActivity : ComponentActivity() {
                         isFullscreen = isFullscreenMode,
                         incomingGamesDir = incomingGamesDir,
                         onWebViewCreated = { mainWebViewRef = it },
-                        onPageFinished = { isPageLoaded = true },
+                        onPageFinished = {
+                            isPageLoaded = true
+                            notifyJsConnectedGamepads()
+                        },
                         onShowFileChooser = { cb ->
                             filePathCallback?.onReceiveValue(null)
                             filePathCallback = cb
@@ -251,6 +285,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        inputManager?.unregisterInputDeviceListener(inputDeviceListener)
         filePathCallback?.onReceiveValue(null)
         filePathCallback = null
         siteWebViewRef?.destroy()
@@ -258,6 +293,176 @@ class MainActivity : ComponentActivity() {
         mainWebViewRef?.destroy()
         mainWebViewRef = null
         super.onDestroy()
+    }
+
+    private fun isGamepadDevice(device: InputDevice?): Boolean {
+        if (device == null) return false
+        val src = device.sources
+        val hasGamepad = (src and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+        val hasJoystick = (src and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+        return hasGamepad || hasJoystick
+    }
+
+    private fun listConnectedControllerNames(): List<String> {
+        val names = mutableListOf<String>()
+        for (id in InputDevice.getDeviceIds()) {
+            val dev = InputDevice.getDevice(id)
+            if (isGamepadDevice(dev) && dev != null && !dev.isVirtual) {
+                val label = dev.name?.trim().orEmpty().ifBlank { "Controller #$id" }
+                if (label !in names) names.add(label)
+            }
+        }
+        return names
+    }
+
+    private fun notifyJsConnectedGamepads() {
+        val wv = mainWebViewRef ?: return
+        if (!isPageLoaded) return
+        val names = listConnectedControllerNames()
+        val arr = JSONArray(names).toString()
+        wv.post {
+            wv.evaluateJavascript(
+                "window.onNativeGamepadConnection && window.onNativeGamepadConnection(${names.size}, $arr);",
+                null,
+            )
+        }
+    }
+
+    private fun resetNativeGamepadState() {
+        nativeGamepadKeys.clear()
+        nativeStickLeftX = 0f
+        nativeStickLeftY = 0f
+        nativeStickRightX = 0f
+        nativeStickRightY = 0f
+        nativeTriggerLeft = 0f
+        nativeTriggerRight = 0f
+        nativeHatX = 0f
+        nativeHatY = 0f
+        lastSentGamepadPayload = ""
+    }
+
+    private fun getCenteredAxis(event: MotionEvent, device: InputDevice?, axis: Int): Float {
+        val value = event.getAxisValue(axis)
+        val range = device?.getMotionRange(axis, event.source)
+        if (range != null) {
+            val flat = maxOf(range.flat, 0.14f)
+            if (abs(value) <= flat) return 0f
+        } else if (abs(value) <= 0.14f) {
+            return 0f
+        }
+        return value.coerceIn(-1f, 1f)
+    }
+
+    private fun mapKeyCodeToSlot(keyCode: Int): String? = when (keyCode) {
+        KeyEvent.KEYCODE_BUTTON_A -> "a"
+        KeyEvent.KEYCODE_BUTTON_B -> "b"
+        KeyEvent.KEYCODE_BUTTON_X -> "x"
+        KeyEvent.KEYCODE_BUTTON_Y -> "y"
+        KeyEvent.KEYCODE_BUTTON_L1 -> "l1"
+        KeyEvent.KEYCODE_BUTTON_R1 -> "r1"
+        KeyEvent.KEYCODE_BUTTON_L2 -> "l2"
+        KeyEvent.KEYCODE_BUTTON_R2 -> "r2"
+        KeyEvent.KEYCODE_BUTTON_START -> "start"
+        KeyEvent.KEYCODE_BUTTON_SELECT, KeyEvent.KEYCODE_BUTTON_MODE -> "esc"
+        KeyEvent.KEYCODE_DPAD_LEFT -> "dpad_left"
+        KeyEvent.KEYCODE_DPAD_RIGHT -> "dpad_right"
+        KeyEvent.KEYCODE_DPAD_UP -> "dpad_up"
+        KeyEvent.KEYCODE_DPAD_DOWN -> "dpad_down"
+        KeyEvent.KEYCODE_DPAD_CENTER -> "a"
+        else -> null
+    }
+
+    private fun pushNativeGamepadState() {
+        val wv = mainWebViewRef ?: return
+        if (!isPageLoaded || !isPlayerActive) return
+        val left = (nativeGamepadKeys["dpad_left"] == true) || nativeHatX < -0.45f || nativeStickLeftX < -0.42f
+        val right = (nativeGamepadKeys["dpad_right"] == true) || nativeHatX > 0.45f || nativeStickLeftX > 0.42f
+        val up = (nativeGamepadKeys["dpad_up"] == true) || nativeHatY < -0.45f || nativeStickLeftY < -0.42f
+        val down = (nativeGamepadKeys["dpad_down"] == true) || nativeHatY > 0.45f || nativeStickLeftY > 0.42f
+        val l2 = (nativeGamepadKeys["l2"] == true) || nativeTriggerLeft > 0.42f
+        val r2 = (nativeGamepadKeys["r2"] == true) || nativeTriggerRight > 0.42f
+
+        val rx = (kotlin.math.round(nativeStickRightX * 100f) / 100f)
+        val ry = (kotlin.math.round(nativeStickRightY * 100f) / 100f)
+
+        val payload = JSONObject().apply {
+            put("connected", true)
+            put("left", left)
+            put("right", right)
+            put("up", up)
+            put("down", down)
+            put("a", nativeGamepadKeys["a"] == true)
+            put("b", nativeGamepadKeys["b"] == true)
+            put("x", nativeGamepadKeys["x"] == true)
+            put("y", nativeGamepadKeys["y"] == true)
+            put("l1", nativeGamepadKeys["l1"] == true)
+            put("r1", nativeGamepadKeys["r1"] == true)
+            put("l2", l2)
+            put("r2", r2)
+            put("start", nativeGamepadKeys["start"] == true)
+            put("esc", nativeGamepadKeys["esc"] == true)
+            put("rx", rx.toDouble())
+            put("ry", ry.toDouble())
+        }.toString()
+
+        if (payload == lastSentGamepadPayload) return
+        lastSentGamepadPayload = payload
+        wv.post {
+            wv.evaluateJavascript("window.onNativeGamepadState && window.onNativeGamepadState($payload);", null)
+        }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (isPageLoaded && isPlayerActive && activeBrowserUrl == null) {
+            val isFromController = isGamepadDevice(event.device) ||
+                event.isFromSource(InputDevice.SOURCE_DPAD) ||
+                KeyEvent.isGamepadButton(event.keyCode)
+            if (isFromController) {
+                val slot = mapKeyCodeToSlot(event.keyCode)
+                if (slot != null) {
+                    if (event.action == KeyEvent.ACTION_DOWN) {
+                        if (event.repeatCount == 0) {
+                            nativeGamepadKeys[slot] = true
+                            pushNativeGamepadState()
+                        }
+                        return true
+                    } else if (event.action == KeyEvent.ACTION_UP) {
+                        nativeGamepadKeys[slot] = false
+                        pushNativeGamepadState()
+                        return true
+                    }
+                }
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        if (isPageLoaded && isPlayerActive && activeBrowserUrl == null) {
+            val isControllerMotion = event.isFromSource(InputDevice.SOURCE_JOYSTICK) ||
+                event.isFromSource(InputDevice.SOURCE_GAMEPAD) ||
+                event.isFromSource(InputDevice.SOURCE_DPAD)
+            if (isControllerMotion && event.action == MotionEvent.ACTION_MOVE) {
+                val device = event.device
+                nativeStickLeftX = getCenteredAxis(event, device, MotionEvent.AXIS_X)
+                nativeStickLeftY = getCenteredAxis(event, device, MotionEvent.AXIS_Y)
+                nativeHatX = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_X)
+                nativeHatY = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_Y)
+                nativeStickRightX = getCenteredAxis(event, device, MotionEvent.AXIS_Z)
+                nativeStickRightY = getCenteredAxis(event, device, MotionEvent.AXIS_RZ)
+                nativeTriggerLeft = maxOf(
+                    event.getAxisValue(MotionEvent.AXIS_LTRIGGER),
+                    event.getAxisValue(MotionEvent.AXIS_BRAKE),
+                )
+                nativeTriggerRight = maxOf(
+                    event.getAxisValue(MotionEvent.AXIS_RTRIGGER),
+                    event.getAxisValue(MotionEvent.AXIS_GAS),
+                )
+                pushNativeGamepadState()
+                return true
+            }
+        }
+        return super.dispatchGenericMotionEvent(event)
     }
 
     private fun closeInAppBrowser() {
@@ -641,7 +846,39 @@ class MainActivity : ComponentActivity() {
         fun setFullscreen(enabled: Boolean) {
             runOnUiThread {
                 updateSystemBars(enabled)
+                if (enabled) {
+                    mainWebViewRef?.requestFocus()
+                }
             }
+        }
+
+        @JavascriptInterface
+        fun setPlayerActive(active: Boolean) {
+            runOnUiThread {
+                isPlayerActive = active
+                if (active) {
+                    mainWebViewRef?.isFocusable = true
+                    mainWebViewRef?.isFocusableInTouchMode = true
+                    mainWebViewRef?.requestFocus()
+                    notifyJsConnectedGamepads()
+                } else {
+                    resetNativeGamepadState()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun focusWebView() {
+            runOnUiThread {
+                mainWebViewRef?.isFocusable = true
+                mainWebViewRef?.isFocusableInTouchMode = true
+                mainWebViewRef?.requestFocus()
+            }
+        }
+
+        @JavascriptInterface
+        fun getConnectedGamepadsJson(): String {
+            return JSONArray(listConnectedControllerNames()).toString()
         }
 
         @JavascriptInterface
@@ -1031,6 +1268,8 @@ fun FlashoraHostScreen(
                     isVerticalScrollBarEnabled = true
                     isHorizontalScrollBarEnabled = false
                     isNestedScrollingEnabled = true
+                    isFocusable = true
+                    isFocusableInTouchMode = true
                     overScrollMode = android.view.View.OVER_SCROLL_IF_CONTENT_SCROLLS
                     setBackgroundColor(android.graphics.Color.parseColor("#0B0F1E"))
                     settings.apply {
