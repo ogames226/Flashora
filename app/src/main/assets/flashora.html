@@ -774,8 +774,8 @@
       -webkit-backdrop-filter: blur(20px);
       box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      padding: 6px;
+      grid-template-columns: repeat(5, 1fr);
+      padding: 6px 4px;
     }
     .nav-item {
       background: none;
@@ -786,12 +786,13 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       border-radius: 18px;
       transition: var(--transition);
       min-height: 48px;
+      padding: 4px 2px;
     }
     .nav-item.active {
       color: var(--primary-a);
@@ -799,6 +800,55 @@
     }
     .nav-item.active svg {
       filter: drop-shadow(0 0 8px var(--primary-glow));
+    }
+
+    /* ===== Sites & Online Archive ===== */
+    .sites-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 680px) {
+      .sites-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .site-card {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .site-card:hover {
+      border-color: rgba(0, 229, 255, 0.45);
+      transform: translateY(-2px);
+    }
+    .site-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .site-badge {
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(0, 229, 255, 0.13);
+      color: var(--secondary);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      white-space: nowrap;
+    }
+    .site-badge.direct {
+      background: rgba(16, 232, 138, 0.15);
+      color: var(--success);
+      border-color: rgba(16, 232, 138, 0.35);
+    }
+    .archive-card {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
 
     /* ===== Fullscreen Game Player ===== */
@@ -1324,6 +1374,62 @@
       <div id="conv-results"></div>
     </section>
 
+    <!-- TAB 3.5: SITES & DIRECT DOWNLOAD -->
+    <section id="view-sites" class="tab-view">
+      <!-- Direct SWF / EXE Link Loader -->
+      <div class="glass-card" style="padding: 16px; margin-bottom: 14px;">
+        <h2 class="section-title" style="margin-bottom: 6px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2.2">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span data-i18n="direct_url_title">تحميل وتجربة من رابط مباشر (.SWF / .EXE)</span>
+        </h2>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <input id="direct-game-url" class="input-field" style="flex:1 1 220px;" type="url" dir="ltr" data-i18n-placeholder="direct_url_ph" placeholder="https://example.com/game.swf" />
+          <button id="btn-direct-url-go" class="btn-primary" type="button" data-i18n="download_and_play">تحميل وتشغيل</button>
+        </div>
+      </div>
+
+      <!-- Live Internet Archive SWF Explorer -->
+      <div class="glass-card" style="padding: 16px; margin-bottom: 14px;">
+        <div class="section-head" style="margin:0 0 8px;">
+          <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-a)" stroke-width="2.2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span data-i18n="archive_live_title">بحث وتحميل مباشر من أرشيف الفلاش (Internet Archive)</span>
+          </h2>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input id="archive-query" class="input-field" style="flex:1 1 200px;" type="search" data-i18n-placeholder="archive_ph" placeholder="اكتب اسم لعبة بالإنجليزية مثل: Mario, Sonic, Tank, Stick…" />
+          <button id="btn-archive-search" class="btn-outline" type="button" data-i18n="search_btn">بحث</button>
+        </div>
+        <div id="archive-presets" class="chips-row" style="padding-bottom:6px; margin-top:6px;"></div>
+        <div id="archive-results" style="display:flex; flex-direction:column; gap:8px; margin-top:6px;"></div>
+      </div>
+
+      <!-- Curated Websites Directory -->
+      <div class="section-head">
+        <h2 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span data-i18n="sites_dir_title">مواقع تحميل ألعاب الفلاش</span>
+        </h2>
+        <button id="btn-open-add-site" class="btn-ghost" type="button">+ <span data-i18n="add_site">أضف موقعاً</span></button>
+      </div>
+      <div class="search-box" style="margin-bottom:8px;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input id="sites-search" class="input-field" type="search" data-i18n-placeholder="sites_search_ph" placeholder="ابحث في قائمة المواقع…" />
+      </div>
+      <div id="sites-categories" class="chips-row"></div>
+      <div id="sites-grid" class="sites-grid"></div>
+    </section>
+
     <!-- TAB 4: SETTINGS -->
     <section id="view-settings" class="tab-view">
       <div class="glass-card settings-group">
@@ -1460,15 +1566,22 @@
       </svg>
       <span data-i18n="nav_library">المكتبة</span>
     </button>
+    <button class="nav-item" data-tab="sites" type="button">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
+        <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+      <span data-i18n="nav_sites">المواقع</span>
+    </button>
     <button class="nav-item" data-tab="converter" type="button">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
         <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
         <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
       </svg>
       <span data-i18n="nav_converter">المحوّل</span>
     </button>
     <button class="nav-item" data-tab="settings" type="button">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
         <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.77 1.02 1.4 1.13H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
       <span data-i18n="nav_settings">الإعدادات</span>
@@ -1615,6 +1728,23 @@
     </div>
   </div>
 
+  <!-- Add Custom Site Modal -->
+  <div id="modal-add-site" class="modal-backdrop">
+    <div class="glass-card modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="add_site_title">إضافة موقع ألعاب فلاش</h3>
+        <button class="icon-btn" type="button" onclick="UI.closeModal('modal-add-site')">✕</button>
+      </div>
+      <input id="custom-site-name" class="input-field" type="text" data-i18n-placeholder="site_name_ph" placeholder="اسم الموقع" />
+      <input id="custom-site-url" class="input-field" type="url" dir="ltr" placeholder="https://..." />
+      <input id="custom-site-desc" class="input-field" type="text" data-i18n-placeholder="site_desc_ph" placeholder="وصف مختصر (اختياري)" />
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn-ghost" type="button" onclick="UI.closeModal('modal-add-site')" data-i18n="cancel">إلغاء</button>
+        <button id="btn-save-custom-site" class="btn-primary" type="button" data-i18n="save">حفظ</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Help Modal -->
   <div id="modal-help" class="modal-backdrop">
     <div class="glass-card modal-card">
@@ -1754,8 +1884,30 @@
         open_game: "افتح لعبة",
         nav_home: "الرئيسية",
         nav_library: "المكتبة",
+        nav_sites: "المواقع",
         nav_converter: "المحوّل",
         nav_settings: "الإعدادات",
+        direct_url_title: "تحميل وتجربة من رابط مباشر (.SWF / .EXE)",
+        direct_url_ph: "الصق رابط ملف .swf أو .exe مباشر هنا…",
+        download_and_play: "تحميل وتشغيل",
+        archive_live_title: "بحث وتحميل مباشر من أرشيف الفلاش (Internet Archive)",
+        archive_ph: "ابحث باسم لعبة مثل: Mario, Sonic, Tank, Stick…",
+        search_btn: "بحث",
+        sites_dir_title: "مواقع تحميل ألعاب الفلاش",
+        sites_search_ph: "ابحث في قائمة المواقع…",
+        add_site: "أضف موقعاً",
+        add_site_title: "إضافة موقع ألعاب فلاش",
+        site_name_ph: "اسم الموقع",
+        site_desc_ph: "وصف مختصر (اختياري)",
+        browse_download: "تصفح وتحميل",
+        downloading_game: "جاري تحميل اللعبة وتجهيزها…",
+        archive_loading: "جاري البحث في Internet Archive…",
+        archive_no_swf: "لم يتم العثور على ملف SWF أو EXE داخل هذا العنصر",
+        site_cat_all: "الكل",
+        site_cat_archive: "أرشيف SWF مباشر",
+        site_cat_portal: "بوابات ألعاب فلاش",
+        site_cat_indie: "مستقلة ومفتوحة المصدر",
+        site_cat_custom: "مواقعي المضافة",
         show_controls: "إظهار الأدوات",
         loading_game: "جاري تحميل اللعبة…",
         edit_game: "تعديل اللعبة",
@@ -1798,9 +1950,9 @@
         help_html: `
           <ul style="padding-inline-start:18px; margin:0;">
             <li><b>تشغيل الألعاب:</b> اضغط "افتح لعبة" واختر ملف <code>.swf</code> أو <code>.exe</code>. عند فتح <code>.exe</code> يستخرج التطبيق الـ SWF ويشغّله تلقائياً.</li>
+            <li><b>المواقع والتحميل المباشر:</b> من تبويب "المواقع" ابحث في أرشيف Internet Archive أو تصفح أشهر مواقع ألعاب الفلاش واضغط زر <b>التقاط SWF</b> داخل المتصفح المدمج لتشغيل أي لعبة فوراً.</li>
             <li><b>المحوّل:</b> حوّل عدة ملفات <code>.exe</code> إلى <code>.swf</code> دفعة واحدة، عاينها، أضفها للمكتبة، أو نزّلها كلها في ملف ZIP.</li>
             <li><b>التحكم على الجوال:</b> استخدم العصا والأزرار الافتراضية، وخصص ربطها بمفاتيح الكيبورد من زر الترس داخل المشغّل.</li>
-            <li><b>العمل أوفلاين:</b> جميع ألعابك محفوظة في IndexedDB داخل جهازك، ويتم تخزين ملفات Ruffle مؤقتاً للعمل دون إنترنت.</li>
           </ul>`
       },
       en: {
@@ -1865,8 +2017,30 @@
         open_game: "Open Game",
         nav_home: "Home",
         nav_library: "Library",
+        nav_sites: "Sites",
         nav_converter: "Converter",
         nav_settings: "Settings",
+        direct_url_title: "Download & Play from Direct URL (.SWF / .EXE)",
+        direct_url_ph: "Paste a direct .swf or .exe link here…",
+        download_and_play: "Download & Play",
+        archive_live_title: "Search & Play Live from Internet Archive",
+        archive_ph: "Search game title e.g. Mario, Sonic, Tank, Stick…",
+        search_btn: "Search",
+        sites_dir_title: "Flash Game Download Websites",
+        sites_search_ph: "Search websites list…",
+        add_site: "Add Site",
+        add_site_title: "Add Custom Flash Site",
+        site_name_ph: "Site name",
+        site_desc_ph: "Short description (optional)",
+        browse_download: "Browse & Download",
+        downloading_game: "Downloading game & preparing player…",
+        archive_loading: "Searching Internet Archive…",
+        archive_no_swf: "No SWF or EXE file found inside this item",
+        site_cat_all: "All",
+        site_cat_archive: "Direct SWF Archives",
+        site_cat_portal: "Flash Game Portals",
+        site_cat_indie: "Indie & Open Source",
+        site_cat_custom: "My Sites",
         show_controls: "Show Controls",
         loading_game: "Loading game…",
         edit_game: "Edit Game",
@@ -1909,9 +2083,9 @@
         help_html: `
           <ul style="padding-inline-start:18px; margin:0;">
             <li><b>Play Games:</b> Tap "Open Game" and select <code>.swf</code> or <code>.exe</code> files. Projector EXEs extract automatically.</li>
+            <li><b>Sites & Direct Download:</b> Browse curated Flash archives in the Sites tab, search Internet Archive, or tap <b>Sniff SWF</b> in the in-app browser to download & play directly.</li>
             <li><b>Converter:</b> Batch convert <code>.exe</code> files to <code>.swf</code>, preview, add to library, or download all as a ZIP.</li>
             <li><b>Mobile Controls:</b> Use the multi-touch joystick & buttons, and remap keys from the gear icon inside the player.</li>
-            <li><b>Offline Ready:</b> Games are stored in IndexedDB locally on your device.</li>
           </ul>`
       }
     };
@@ -3126,6 +3300,392 @@
     };
 
     /* =========================================================================
+       10.5. FLASH GAME WEBSITES DIRECTORY & LIVE ARCHIVE DOWNLOADER
+       ========================================================================= */
+    const PRESET_FLASH_SITES = [
+      {
+        id: "ia_flash",
+        name: "Internet Archive — Flash Library",
+        url: "https://archive.org/details/softwarelibrary_flash",
+        category: "archive",
+        badgeAr: "SWF مباشر",
+        badgeEn: "Direct SWF",
+        direct: true,
+        descAr: "أكبر أرشيف مجاني لألعاب وملفات الفلاش الكلاسيكية مع تحميل مباشر لملفات SWF.",
+        descEn: "Largest free archive of classic Flash games with direct SWF downloads."
+      },
+      {
+        id: "ia_swf_search",
+        name: "Internet Archive — SWF Search",
+        url: "https://archive.org/search?query=format%3A%22Shockwave+Flash%22",
+        category: "archive",
+        badgeAr: "SWF مباشر",
+        badgeEn: "Direct SWF",
+        direct: true,
+        descAr: "فهرس آلاف ملفات Shockwave Flash (.swf) القابلة للتحميل والتجربة الفورية.",
+        descEn: "Index of thousands of Shockwave Flash (.swf) files ready to download."
+      },
+      {
+        id: "flashpoint_db",
+        name: "Flashpoint Archive Database",
+        url: "https://flashpointproject.github.io/flashpoint-database/",
+        category: "archive",
+        badgeAr: "قاعدة بيانات ضخمة",
+        badgeEn: "Huge DB",
+        direct: false,
+        descAr: "أكبر قاعدة بيانات لحفظ أكثر من 150,000 لعبة ورسوم متحركة فلاش.",
+        descEn: "Massive preservation database covering 150,000+ Flash games & animations."
+      },
+      {
+        id: "flashmuseum",
+        name: "Flash Museum",
+        url: "https://flashmuseum.org/",
+        category: "archive",
+        badgeAr: "أرشيف مصنّف",
+        badgeEn: "Curated Archive",
+        direct: true,
+        descAr: "متحف لألعاب الفلاش المصنّفة مع وصف واضح وتوافق مباشر مع Ruffle.",
+        descEn: "Curated Flash museum organized by genre with Ruffle compatibility."
+      },
+      {
+        id: "ruffle_demo",
+        name: "Ruffle Official Showcase",
+        url: "https://ruffle.rs/demo/",
+        category: "archive",
+        badgeAr: "متوافق 100%",
+        badgeEn: "100% Ruffle",
+        direct: true,
+        descAr: "ألعاب وعروض رسمية من فريق Ruffle للتجربة السريعة وفحص الأداء.",
+        descEn: "Official Ruffle showcase demos for instant testing."
+      },
+      {
+        id: "newgrounds",
+        name: "Newgrounds Games",
+        url: "https://www.newgrounds.com/games",
+        category: "portal",
+        badgeAr: "بوابة أسطورية",
+        badgeEn: "Classic Portal",
+        direct: false,
+        descAr: "الموقع الأشهر لألعاب الفلاش الأصلية والأكشن والمغامرات والأنيميشن.",
+        descEn: "Iconic home of original Flash action, adventure, and indie games."
+      },
+      {
+        id: "armorgames",
+        name: "Armor Games",
+        url: "https://armorgames.com/category/all",
+        category: "portal",
+        badgeAr: "استراتيجية وأكشن",
+        badgeEn: "Strategy & Action",
+        direct: false,
+        descAr: "مكتبة ضخمة لأشهر ألعاب الدفاع عن البرج والأكشن والـ RPG الكلاسيكية.",
+        descEn: "Famous collection of Tower Defense, RPG, and action Flash classics."
+      },
+      {
+        id: "kongregate",
+        name: "Kongregate",
+        url: "https://www.kongregate.com/games",
+        category: "portal",
+        badgeAr: "ألعاب متنوعة",
+        badgeEn: "Portals",
+        direct: false,
+        descAr: "آلاف ألعاب الفلاش والإندي الكلاسيكية المصنفة حسب التقييم.",
+        descEn: "Thousands of classic Flash and indie games sorted by player rating."
+      },
+      {
+        id: "y8_flash",
+        name: "Y8 Flash Games",
+        url: "https://www.y8.com/tags/flash",
+        category: "portal",
+        badgeAr: "سباق وأكشن",
+        badgeEn: "Racing & Arcade",
+        direct: false,
+        descAr: "مجموعة كبيرة من ألعاب الفلاش السريعة والسباقات وألعاب اللاعبين.",
+        descEn: "Huge collection of quick arcade, racing, and 2-player Flash games."
+      },
+      {
+        id: "crazygames_flash",
+        name: "CrazyGames (Flash Tag)",
+        url: "https://www.crazygames.com/t/flash",
+        category: "portal",
+        badgeAr: "كلاسيك",
+        badgeEn: "Classics",
+        direct: false,
+        descAr: "أشهر ألعاب الفلاش الكلاسيكية المجمعة في واجهة سريعة.",
+        descEn: "Popular classic Flash titles gathered in one fast portal."
+      },
+      {
+        id: "flashgames247",
+        name: "FlashGames247",
+        url: "https://www.flashgames247.com/",
+        category: "portal",
+        badgeAr: "أركيد خفيف",
+        badgeEn: "Arcade",
+        direct: false,
+        descAr: "ألعاب فلاش خفيفة ومسلية للألغاز والسباق والمهارة.",
+        descEn: "Lightweight classic puzzle, racing, and skill Flash games."
+      },
+      {
+        id: "numuki",
+        name: "NuMuKi — Cartoon & Flash Vault",
+        url: "https://www.numuki.com/games/flash/",
+        category: "portal",
+        badgeAr: "ألعاب كرتون",
+        badgeEn: "Retro Vault",
+        direct: false,
+        descAr: "مكتبة تحفظ ألعاب الفلاش الكرتونية الكلاسيكية النادرة.",
+        descEn: "Preservation vault for nostalgic cartoon & retro Flash games."
+      },
+      {
+        id: "itch_flash",
+        name: "Itch.io — Flash / SWF Games",
+        url: "https://itch.io/games/tag-flash",
+        category: "indie",
+        badgeAr: "تحميل SWF / EXE",
+        badgeEn: "SWF / EXE",
+        direct: true,
+        descAr: "ألعاب فلاش مستقلة من مطورين جدد وكلاسيكيين مع ملفات قابلة للتحميل.",
+        descEn: "Indie Flash games from creators with downloadable SWF/EXE builds."
+      },
+      {
+        id: "github_swf",
+        name: "GitHub — Open Source SWF Games",
+        url: "https://github.com/search?q=extension%3Aswf+game&type=repositories",
+        category: "indie",
+        badgeAr: "مفتوح المصدر",
+        badgeEn: "Open Source",
+        direct: true,
+        descAr: "مستودعات GitHub التي تحتوي على ملفات .swf مفتوحة المصدر للتحميل المباشر.",
+        descEn: "Open-source GitHub repositories containing downloadable .swf games."
+      },
+      {
+        id: "oldgamesdownload",
+        name: "OldGamesDownload",
+        url: "https://oldgamesdownload.com/",
+        category: "indie",
+        badgeAr: "أرشيف ألعاب",
+        badgeEn: "Retro Archive",
+        direct: false,
+        descAr: "أرشيف للألعاب الكلاسيكية القديمة ونسخ EXE/Projector.",
+        descEn: "Archive of classic retro titles and Windows Projector packages."
+      },
+      {
+        id: "minijuegos_flash",
+        name: "Minijuegos Classic Flash",
+        url: "https://www.minijuegos.com/juegos-de-flash",
+        category: "portal",
+        badgeAr: "أركيد",
+        badgeEn: "Arcade",
+        direct: false,
+        descAr: "تشكيلة ضخمة من ألعاب الفلاش المتنوعة بجميع التصنيفات.",
+        descEn: "Wide variety of classic Flash arcade games across all genres."
+      }
+    ];
+
+    const ARCHIVE_PRESETS = [
+      { labelAr: "الأكثر تحميلاً", labelEn: "Popular", q: "flash game" },
+      { labelAr: "أكشن", labelEn: "Action", q: "action" },
+      { labelAr: "سباق", labelEn: "Racing", q: "racing" },
+      { labelAr: "ألغاز", labelEn: "Puzzle", q: "puzzle" },
+      { labelAr: "منصات", labelEn: "Platformer", q: "platformer" },
+      { labelAr: "ستيك مان", labelEn: "Stickman", q: "stick" }
+    ];
+
+    const SitesDirectory = {
+      activeCat: "all",
+      customSites: [],
+      archiveItems: [],
+      archiveBusy: false,
+
+      loadCustom() {
+        try {
+          const raw = localStorage.getItem("flashora_custom_sites_v1");
+          this.customSites = raw ? JSON.parse(raw) : [];
+        } catch (_) {
+          this.customSites = [];
+        }
+      },
+      saveCustom() {
+        try {
+          localStorage.setItem("flashora_custom_sites_v1", JSON.stringify(this.customSites));
+        } catch (_) {}
+      },
+      allSites() {
+        return [...this.customSites, ...PRESET_FLASH_SITES];
+      },
+      renderCategories() {
+        const cats = ["all", "archive", "portal", "indie", "custom"];
+        const box = document.getElementById("sites-categories");
+        if (!box) return;
+        box.innerHTML = cats.map((c) => `
+          <button type="button" class="chip ${this.activeCat === c ? "active" : ""}" onclick="SitesDirectory.setCategory('${c}')">
+            ${t("site_cat_" + c)}
+          </button>
+        `).join("");
+      },
+      setCategory(cat) {
+        this.activeCat = cat;
+        this.renderCategories();
+        this.renderSites();
+      },
+      renderPresets() {
+        const box = document.getElementById("archive-presets");
+        if (!box) return;
+        const isAr = Settings.data.lang === "ar";
+        box.innerHTML = ARCHIVE_PRESETS.map((p) => `
+          <button type="button" class="chip" onclick="SitesDirectory.quickArchive('${p.q}')">
+            ${isAr ? p.labelAr : p.labelEn}
+          </button>
+        `).join("");
+      },
+      quickArchive(q) {
+        document.getElementById("archive-query").value = q;
+        this.searchArchive(q);
+      },
+      renderSites() {
+        const grid = document.getElementById("sites-grid");
+        if (!grid) return;
+        const q = (document.getElementById("sites-search").value || "").trim().toLowerCase();
+        const isAr = Settings.data.lang === "ar";
+        let list = this.allSites();
+        if (this.activeCat !== "all") list = list.filter((s) => s.category === this.activeCat);
+        if (q) {
+          list = list.filter((s) =>
+            s.name.toLowerCase().includes(q) ||
+            (s.descAr || "").toLowerCase().includes(q) ||
+            (s.descEn || "").toLowerCase().includes(q) ||
+            s.url.toLowerCase().includes(q)
+          );
+        }
+        grid.innerHTML = list.map((s) => {
+          const badge = isAr ? (s.badgeAr || "موقع") : (s.badgeEn || "Site");
+          const desc = isAr ? (s.descAr || s.url) : (s.descEn || s.url);
+          const delBtn = s.category === "custom"
+            ? `<button class="icon-btn" type="button" onclick="SitesDirectory.removeCustom('${s.id}')" style="color:var(--danger)" aria-label="Delete">✕</button>`
+            : "";
+          return `
+            <div class="glass-card site-card">
+              <div class="site-header">
+                <div style="min-width:0;">
+                  <div style="font-size:15px; font-weight:800;">${escapeHtml(s.name)}</div>
+                  <div style="font-size:11.5px; color:var(--text-muted); direction:ltr; text-align:start; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.url)}</div>
+                </div>
+                <span class="site-badge ${s.direct ? "direct" : ""}">${escapeHtml(badge)}</span>
+              </div>
+              <div style="font-size:13px; color:var(--text-muted); line-height:1.55;">${escapeHtml(desc)}</div>
+              <div style="display:flex; gap:8px; align-items:center; justify-content:space-between;">
+                <button class="btn-primary" style="flex:1; min-height:42px; padding:8px 14px; font-size:13px;" type="button" onclick="SitesDirectory.openSite('${escapeHtml(s.url)}')">
+                  ${t("browse_download")}
+                </button>
+                ${delBtn}
+              </div>
+            </div>`;
+        }).join("");
+      },
+      openSite(url) {
+        if (window.AndroidBridge && typeof window.AndroidBridge.openInAppBrowser === "function") {
+          window.AndroidBridge.openInAppBrowser(url);
+        } else {
+          window.open(url, "_blank", "noopener,noreferrer");
+        }
+      },
+      removeCustom(id) {
+        this.customSites = this.customSites.filter((s) => s.id !== id);
+        this.saveCustom();
+        this.renderSites();
+      },
+      async searchArchive(customQuery) {
+        const qInput = document.getElementById("archive-query");
+        const q = (customQuery !== undefined ? customQuery : qInput.value).trim();
+        const box = document.getElementById("archive-results");
+        if (!box) return;
+        this.archiveBusy = true;
+        box.innerHTML = `<div style="padding:12px; color:var(--secondary); font-weight:700; font-size:13px;">${t("archive_loading")}</div>`;
+        try {
+          const term = q ? `(${q}) AND ` : "";
+          const query = `${term}mediatype:software AND format:"Shockwave Flash"`;
+          const apiUrl = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(query)}&fl[]=identifier,title,downloads&sort[]=downloads+desc&rows=12&output=json`;
+          const resp = await fetch(apiUrl);
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          const data = await resp.json();
+          const docs = (data && data.response && data.response.docs) || [];
+          this.archiveItems = docs;
+          if (!docs.length) {
+            box.innerHTML = `<div style="padding:10px; color:var(--text-muted); font-size:13px;">${t("empty_lib_title")}</div>`;
+            return;
+          }
+          box.innerHTML = docs.map((d) => `
+            <div class="glass-card archive-card">
+              <div style="min-width:0;">
+                <div style="font-size:14px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.title || d.identifier)}</div>
+                <div style="font-size:11.5px; color:var(--text-muted);">archive.org • ${d.downloads ? d.downloads.toLocaleString() + " ↓" : "SWF"}</div>
+              </div>
+              <div style="display:flex; gap:6px; flex-shrink:0;">
+                <button class="btn-primary" style="min-height:40px; padding:8px 12px; font-size:12.5px;" type="button" onclick="SitesDirectory.playArchiveItem('${escapeHtml(d.identifier)}')">${t("download_and_play")}</button>
+                <button class="icon-btn" type="button" onclick="SitesDirectory.openSite('https://archive.org/details/${escapeHtml(d.identifier)}')" title="Open page">↗</button>
+              </div>
+            </div>
+          `).join("");
+        } catch (err) {
+          box.innerHTML = `<div style="padding:10px; color:var(--danger); font-size:13px;">${escapeHtml((err && err.message) || "Network error")}</div>`;
+        } finally {
+          this.archiveBusy = false;
+        }
+      },
+      async playArchiveItem(identifier) {
+        UI.toast(t("downloading_game"));
+        try {
+          const metaResp = await fetch(`https://archive.org/metadata/${encodeURIComponent(identifier)}`);
+          if (!metaResp.ok) throw new Error("HTTP " + metaResp.status);
+          const meta = await metaResp.json();
+          const files = meta.files || [];
+          const swfFile = files.find((f) => /\.swf$/i.test(f.name)) || files.find((f) => /\.exe$/i.test(f.name));
+          if (!swfFile) {
+            UI.toast(t("archive_no_swf"), "error");
+            return;
+          }
+          const dlUrl = `https://archive.org/download/${encodeURIComponent(identifier)}/${encodeURIComponent(swfFile.name)}`;
+          await this.downloadAndPlayUrl(dlUrl, swfFile.name);
+        } catch (err) {
+          UI.toast((err && err.message) || t("err_not_flash"), "error");
+        }
+      },
+      async downloadAndPlayUrl(url, suggestedName) {
+        const cleanUrl = (url || "").trim();
+        if (!cleanUrl) return;
+        const guessName = suggestedName || cleanUrl.split("?")[0].split("/").pop() || "game.swf";
+        UI.toast(t("downloading_game"));
+
+        if (window.AndroidBridge && typeof window.AndroidBridge.downloadAndPlayUrl === "function") {
+          window.AndroidBridge.downloadAndPlayUrl(cleanUrl, guessName);
+          return;
+        }
+
+        try {
+          const resp = await fetch(cleanUrl);
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          const ab = await resp.arrayBuffer();
+          await UI.importFetchedArrayBuffer(guessName, ab);
+        } catch (err) {
+          UI.toast((err && err.message) || t("err_not_flash"), "error");
+        }
+      }
+    };
+
+    window.onNativeGameReady = async function (fileName, internalUrl) {
+      try {
+        const resp = await fetch(internalUrl);
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        const ab = await resp.arrayBuffer();
+        await UI.importFetchedArrayBuffer(fileName, ab);
+      } catch (err) {
+        UI.toast((err && err.message) || t("err_not_flash"), "error");
+      }
+    };
+    window.onNativeGameError = function (msg) {
+      UI.toast(msg || t("err_not_flash"), "error");
+    };
+
+    /* =========================================================================
        11. UI CONTROLLER, LIBRARY MANAGEMENT & EVENT WIRING
        ========================================================================= */
     const CATEGORIES = ["all", "fav", "action", "puzzle", "adventure", "racing", "classic", "other"];
@@ -3138,6 +3698,7 @@
 
       async init() {
         Settings.load();
+        SitesDirectory.loadCustom();
         initPwaManifestAndCache();
         this.bindEvents();
         VirtualPad.init();
@@ -3155,6 +3716,9 @@
         this.activeTab = tab;
         document.querySelectorAll(".tab-view").forEach((el) => el.classList.toggle("active", el.id === "view-" + tab));
         document.querySelectorAll(".nav-item").forEach((el) => el.classList.toggle("active", el.dataset.tab === tab));
+        if (tab === "sites" && !SitesDirectory.archiveItems.length && !SitesDirectory.archiveBusy) {
+          SitesDirectory.searchArchive("flash game");
+        }
       },
 
       applyTranslations() {
@@ -3167,6 +3731,9 @@
         document.getElementById("help-body").innerHTML = t("help_html");
         RuffleEngine.setEngineBadge(RuffleEngine.ready ? "ready" : (RuffleEngine.loading ? "loading" : "error"));
         this.renderCategoryChips();
+        SitesDirectory.renderCategories();
+        SitesDirectory.renderPresets();
+        SitesDirectory.renderSites();
         this.syncSettingsControls();
         this.refreshLists();
         Converter.render();
@@ -3329,6 +3896,25 @@
         }
       },
 
+      async importFetchedArrayBuffer(fileName, ab) {
+        const lower = (fileName || "").toLowerCase();
+        let swfBuffer = ab;
+        let info = null;
+        let cleanName = fileName.replace(/\.(swf|exe)$/i, "");
+
+        if (lower.endsWith(".exe")) {
+          const res = await SwfTools.extractFromExe(ab);
+          swfBuffer = res.swfBuffer;
+          info = res.info;
+        } else {
+          info = await SwfTools.parseSwfInfo(ab);
+        }
+
+        const record = await this.saveGameBuffer(cleanName + ".swf", swfBuffer, info);
+        RuffleEngine.openGame(record);
+        return record;
+      },
+
       async saveGameBuffer(fileName, swfBuffer, swfInfo) {
         const record = {
           id: "game_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
@@ -3487,6 +4073,41 @@
         document.getElementById("home-search").addEventListener("input", () => this.renderHome());
         document.getElementById("lib-search").addEventListener("input", () => this.renderLibrary());
         document.getElementById("lib-sort").addEventListener("change", () => this.renderLibrary());
+
+        // Sites Tab & Direct Downloader
+        document.getElementById("sites-search").addEventListener("input", () => SitesDirectory.renderSites());
+        document.getElementById("btn-direct-url-go").addEventListener("click", () => {
+          SitesDirectory.downloadAndPlayUrl(document.getElementById("direct-game-url").value);
+        });
+        document.getElementById("btn-archive-search").addEventListener("click", () => SitesDirectory.searchArchive());
+        document.getElementById("archive-query").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") SitesDirectory.searchArchive();
+        });
+        document.getElementById("btn-open-add-site").addEventListener("click", () => this.openModal("modal-add-site"));
+        document.getElementById("btn-save-custom-site").addEventListener("click", () => {
+          const name = document.getElementById("custom-site-name").value.trim();
+          let url = document.getElementById("custom-site-url").value.trim();
+          const desc = document.getElementById("custom-site-desc").value.trim();
+          if (!name || !url) return;
+          if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+          SitesDirectory.customSites.unshift({
+            id: "site_" + Date.now(),
+            name,
+            url,
+            category: "custom",
+            badgeAr: "مخصص",
+            badgeEn: "Custom",
+            direct: false,
+            descAr: desc || url,
+            descEn: desc || url
+          });
+          SitesDirectory.saveCustom();
+          document.getElementById("custom-site-name").value = "";
+          document.getElementById("custom-site-url").value = "";
+          document.getElementById("custom-site-desc").value = "";
+          this.closeModal("modal-add-site");
+          SitesDirectory.renderSites();
+        });
 
         // Edit Game Save
         document.getElementById("btn-save-game-edit").addEventListener("click", async () => {
@@ -3660,6 +4281,7 @@
 
     window.UI = UI;
     window.Converter = Converter;
+    window.SitesDirectory = SitesDirectory;
     document.addEventListener("DOMContentLoaded", () => UI.init());
   })();
   </script>

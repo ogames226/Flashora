@@ -3,4 +3,14 @@
     <string name="loading_flashora">جاري تشغيل فلاشورا…</string>
     <string name="file_saved_success">تم حفظ الملف بنجاح</string>
     <string name="file_save_error">تعذر حفظ الملف</string>
+    <string name="browser_close">إغلاق المتصفح</string>
+    <string name="browser_back">رجوع</string>
+    <string name="browser_forward">تقدم</string>
+    <string name="browser_reload">تحديث</string>
+    <string name="browser_sniff_swf">التقاط SWF</string>
+    <string name="browser_downloading_game">جاري تحميل اللعبة وتجهيزها للتشغيل…</string>
+    <string name="browser_no_swf_found">لم يتم العثور على روابط SWF أو EXE مباشرة في هذه الصفحة</string>
+    <string name="browser_detected_files">تم العثور على ملفات فلاش في الصفحة</string>
+    <string name="browser_download_failed">تعذر تحميل الملف من الرابط</string>
+    <string name="cancel">إلغاء</string>
 </resources>
