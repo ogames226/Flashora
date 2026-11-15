@@ -1,0 +1,6 @@
+{
+  "name": "Flashora",
+  "description": "فلاشورا - مشغّل ألعاب الفلاش (SWF & EXE) ومحوّل Flash Projector أوفلاين",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
