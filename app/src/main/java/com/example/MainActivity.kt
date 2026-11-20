@@ -1,13 +1,16 @@
 package com.example
 
 import android.annotation.SuppressLint
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.hardware.input.InputManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Message
 import android.util.Base64
 import android.view.InputDevice
 import android.view.KeyEvent
@@ -16,6 +19,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -30,7 +34,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -111,18 +117,22 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
+import java.util.concurrent.FutureTask
+import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 import java.util.zip.ZipInputStream
 
 class MainActivity : ComponentActivity() {
 
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
+    private var pendingCameraUri: Uri? = null
     private var pendingSaveBytes: ByteArray? = null
     private var mainWebViewRef: WebView? = null
     private var siteWebViewRef: WebView? = null
@@ -166,6 +176,34 @@ class MainActivity : ComponentActivity() {
             if (cb != null) {
                 if (uris.isNotEmpty()) {
                     cb.onReceiveValue(uris.toTypedArray())
+                } else {
+                    cb.onReceiveValue(null)
+                }
+            }
+        }
+
+    private val photoPickerLauncher =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            val cb = filePathCallback
+            filePathCallback = null
+            if (cb != null) {
+                if (uri != null) {
+                    cb.onReceiveValue(arrayOf(uri))
+                } else {
+                    cb.onReceiveValue(null)
+                }
+            }
+        }
+
+    private val takePictureLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            val cb = filePathCallback
+            val cameraUri = pendingCameraUri
+            filePathCallback = null
+            pendingCameraUri = null
+            if (cb != null) {
+                if (success && cameraUri != null) {
+                    cb.onReceiveValue(arrayOf(cameraUri))
                 } else {
                     cb.onReceiveValue(null)
                 }
@@ -231,10 +269,50 @@ class MainActivity : ComponentActivity() {
                             isPageLoaded = true
                             notifyJsConnectedGamepads()
                         },
-                        onShowFileChooser = { cb ->
+                        onShowFileChooser = { cb, params ->
                             filePathCallback?.onReceiveValue(null)
                             filePathCallback = cb
-                            openFilesLauncher.launch(arrayOf("*/*"))
+                            pendingCameraUri = null
+                            val acceptsImage = params?.acceptTypes?.any {
+                                it.contains("image", ignoreCase = true)
+                            } == true
+                            when {
+                                params?.isCaptureEnabled == true && acceptsImage -> {
+                                    try {
+                                        val camDir = File(cacheDir, "camera").apply { mkdirs() }
+                                        camDir.listFiles()?.forEach { old ->
+                                            if (System.currentTimeMillis() - old.lastModified() > 60 * 60 * 1000L) {
+                                                old.delete()
+                                            }
+                                        }
+                                        val outFile = File(camDir, "cover_${UUID.randomUUID()}.jpg")
+                                        val photoUri = FileProvider.getUriForFile(
+                                            this@MainActivity,
+                                            "$packageName.fileprovider",
+                                            outFile,
+                                        )
+                                        pendingCameraUri = photoUri
+                                        takePictureLauncher.launch(photoUri)
+                                    } catch (_: Exception) {
+                                        pendingCameraUri = null
+                                        filePathCallback?.onReceiveValue(null)
+                                        filePathCallback = null
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            getString(R.string.file_save_error),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }
+                                }
+                                acceptsImage -> {
+                                    photoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                    )
+                                }
+                                else -> {
+                                    openFilesLauncher.launch(arrayOf("*/*"))
+                                }
+                            }
                         },
                         bridge = FlashoraBridge(),
                     )
@@ -288,8 +366,10 @@ class MainActivity : ComponentActivity() {
         inputManager?.unregisterInputDeviceListener(inputDeviceListener)
         filePathCallback?.onReceiveValue(null)
         filePathCallback = null
+        siteWebViewRef?.stopLoading()
         siteWebViewRef?.destroy()
         siteWebViewRef = null
+        mainWebViewRef?.stopLoading()
         mainWebViewRef?.destroy()
         mainWebViewRef = null
         super.onDestroy()
@@ -891,6 +971,13 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
+        fun openExternalUrl(url: String) {
+            runOnUiThread {
+                openUriInExternalBrowser(url)
+            }
+        }
+
+        @JavascriptInterface
         fun downloadAndPlayUrl(url: String, suggestedName: String) {
             runOnUiThread {
                 val referer = Uri.parse(url).let { u ->
@@ -898,6 +985,175 @@ class MainActivity : ComponentActivity() {
                 }
                 downloadAndDeliverToFlashora(url, suggestedName, referer)
             }
+        }
+
+        @JavascriptInterface
+        fun readClipboardText(): String {
+            return try {
+                val task = FutureTask {
+                    val cm = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                    val clip = cm?.primaryClip
+                    if (clip != null && clip.itemCount > 0) {
+                        clip.getItemAt(0).coerceToText(this@MainActivity)?.toString().orEmpty()
+                    } else {
+                        ""
+                    }
+                }
+                Handler(Looper.getMainLooper()).post(task)
+                task.get(600, TimeUnit.MILLISECONDS)
+            } catch (_: Exception) {
+                ""
+            }
+        }
+
+        @JavascriptInterface
+        fun fetchImageUrl(requestId: String, rawUrl: String) {
+            lifecycleScope.launch {
+                val trimmed = rawUrl.trim()
+                if (!trimmed.startsWith("http://", ignoreCase = true) &&
+                    !trimmed.startsWith("https://", ignoreCase = true)
+                ) {
+                    val msg = getString(R.string.cover_url_invalid)
+                    mainWebViewRef?.evaluateJavascript(
+                        "window.onNativeImageUrlResult && window.onNativeImageUrlResult(${JSONObject.quote(requestId)}, false, \"\", ${JSONObject.quote(msg)});",
+                        null,
+                    )
+                    return@launch
+                }
+
+                val result = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val chromeUa =
+                            "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
+                        var currentUrl = trimmed
+                        var conn: HttpURLConnection? = null
+                        var redirects = 0
+                        while (redirects < 6) {
+                            val urlObj = URL(currentUrl)
+                            conn = (urlObj.openConnection() as HttpURLConnection).apply {
+                                instanceFollowRedirects = false
+                                connectTimeout = 15000
+                                readTimeout = 20000
+                                setRequestProperty("User-Agent", chromeUa)
+                                setRequestProperty("Accept", "image/webp,image/png,image/jpeg,image/*,*/*;q=0.8")
+                            }
+                            val code = conn.responseCode
+                            if (code in 300..399) {
+                                val loc = conn.getHeaderField("Location") ?: break
+                                currentUrl = URL(urlObj, loc).toString()
+                                conn.disconnect()
+                                redirects++
+                            } else {
+                                break
+                            }
+                        }
+
+                        val activeConn = conn ?: error(getString(R.string.cover_url_fetch_failed))
+                        try {
+                            val code = activeConn.responseCode
+                            if (code !in 200..299) {
+                                error(getString(R.string.cover_url_fetch_failed) + " (HTTP $code)")
+                            }
+                            val maxBytes = 8 * 1024 * 1024
+                            val baos = ByteArrayOutputStream()
+                            val buf = ByteArray(16384)
+                            var total = 0
+                            activeConn.inputStream.use { input ->
+                                while (true) {
+                                    val n = input.read(buf)
+                                    if (n <= 0) break
+                                    total += n
+                                    if (total > maxBytes) {
+                                        error(getString(R.string.cover_url_fetch_failed))
+                                    }
+                                    baos.write(buf, 0, n)
+                                }
+                            }
+                            val bytes = baos.toByteArray()
+                            if (bytes.size < 16) {
+                                error(getString(R.string.cover_url_not_image))
+                            }
+                            val detectedMime = detectImageMime(bytes, activeConn.contentType)
+                                ?: error(getString(R.string.cover_url_not_image))
+                            val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                            "data:$detectedMime;base64,$b64"
+                        } finally {
+                            activeConn.disconnect()
+                        }
+                    }
+                }
+
+                result.onSuccess { dataUrl ->
+                    mainWebViewRef?.evaluateJavascript(
+                        "window.onNativeImageUrlResult && window.onNativeImageUrlResult(${JSONObject.quote(requestId)}, true, ${JSONObject.quote(dataUrl)}, \"\");",
+                        null,
+                    )
+                }.onFailure { err ->
+                    val msg = err.message ?: getString(R.string.cover_url_fetch_failed)
+                    mainWebViewRef?.evaluateJavascript(
+                        "window.onNativeImageUrlResult && window.onNativeImageUrlResult(${JSONObject.quote(requestId)}, false, \"\", ${JSONObject.quote(msg)});",
+                        null,
+                    )
+                }
+            }
+        }
+    }
+
+    private fun detectImageMime(bytes: ByteArray, contentType: String?): String? {
+        if (bytes.size >= 3 &&
+            (bytes[0].toInt() and 0xFF) == 0xFF &&
+            (bytes[1].toInt() and 0xFF) == 0xD8 &&
+            (bytes[2].toInt() and 0xFF) == 0xFF
+        ) {
+            return "image/jpeg"
+        }
+        if (bytes.size >= 8 &&
+            (bytes[0].toInt() and 0xFF) == 0x89 &&
+            bytes[1] == 'P'.code.toByte() &&
+            bytes[2] == 'N'.code.toByte() &&
+            bytes[3] == 'G'.code.toByte()
+        ) {
+            return "image/png"
+        }
+        if (bytes.size >= 12 &&
+            bytes[0] == 'R'.code.toByte() &&
+            bytes[1] == 'I'.code.toByte() &&
+            bytes[2] == 'F'.code.toByte() &&
+            bytes[3] == 'F'.code.toByte() &&
+            bytes[8] == 'W'.code.toByte() &&
+            bytes[9] == 'E'.code.toByte() &&
+            bytes[10] == 'B'.code.toByte() &&
+            bytes[11] == 'P'.code.toByte()
+        ) {
+            return "image/webp"
+        }
+        if (bytes.size >= 6 &&
+            bytes[0] == 'G'.code.toByte() &&
+            bytes[1] == 'I'.code.toByte() &&
+            bytes[2] == 'F'.code.toByte()
+        ) {
+            return "image/gif"
+        }
+        val ct = contentType?.substringBefore(';')?.trim()?.lowercase() ?: ""
+        if (ct.startsWith("image/") && !ct.contains("svg")) {
+            return ct
+        }
+        return null
+    }
+
+    private fun openUriInExternalBrowser(rawUrl: String) {
+        try {
+            val uri = Uri.parse(rawUrl.trim())
+            val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(
+                this,
+                getString(R.string.browser_open_external_error),
+                Toast.LENGTH_SHORT,
+            ).show()
         }
     }
 }
@@ -1125,6 +1381,15 @@ fun InAppFlashBrowserOverlay(
                                 }
                                 return false
                             }
+
+                            override fun onRenderProcessGone(
+                                view: WebView?,
+                                detail: RenderProcessGoneDetail?,
+                            ): Boolean {
+                                onLoadingChanged(false)
+                                onClose()
+                                return true
+                            }
                         }
                         setDownloadListener { url, _, contentDisposition, mimeType, _ ->
                             onDownloadIntercepted(url, contentDisposition, mimeType)
@@ -1231,7 +1496,7 @@ fun FlashoraHostScreen(
     incomingGamesDir: File,
     onWebViewCreated: (WebView) -> Unit,
     onPageFinished: () -> Unit,
-    onShowFileChooser: (ValueCallback<Array<Uri>>) -> Unit,
+    onShowFileChooser: (ValueCallback<Array<Uri>>, WebChromeClient.FileChooserParams?) -> Unit,
     bridge: MainActivity.FlashoraBridge,
 ) {
     val containerModifier = if (isFullscreen) {
@@ -1245,7 +1510,10 @@ fun FlashoraHostScreen(
             .windowInsetsPadding(WindowInsets.safeDrawing)
     }
 
+    var webViewNonce by remember { mutableStateOf(0) }
+
     Box(modifier = containerModifier) {
+        androidx.compose.runtime.key(webViewNonce) {
         AndroidView(
             modifier = Modifier
                 .fillMaxSize()
@@ -1282,6 +1550,8 @@ fun FlashoraHostScreen(
                         loadWithOverviewMode = true
                         allowFileAccess = false
                         allowContentAccess = true
+                        javaScriptCanOpenWindowsAutomatically = true
+                        setSupportMultipleWindows(true)
                     }
                     addJavascriptInterface(bridge, "AndroidBridge")
                     webViewClient = object : WebViewClient() {
@@ -1296,6 +1566,17 @@ fun FlashoraHostScreen(
                             super.onPageFinished(view, url)
                             onPageFinished()
                         }
+
+                        override fun onRenderProcessGone(
+                            view: WebView?,
+                            detail: RenderProcessGoneDetail?,
+                        ): Boolean {
+                            view?.post {
+                                try { view.destroy() } catch (_: Exception) {}
+                                webViewNonce++
+                            }
+                            return true
+                        }
                     }
                     webChromeClient = object : WebChromeClient() {
                         override fun onShowFileChooser(
@@ -1304,7 +1585,35 @@ fun FlashoraHostScreen(
                             fileChooserParams: FileChooserParams?,
                         ): Boolean {
                             if (filePathCallback == null) return false
-                            onShowFileChooser(filePathCallback)
+                            onShowFileChooser(filePathCallback, fileChooserParams)
+                            return true
+                        }
+
+                        override fun onCreateWindow(
+                            view: WebView?,
+                            isDialog: Boolean,
+                            isUserGesture: Boolean,
+                            resultMsg: Message?,
+                        ): Boolean {
+                            val ctx = view?.context ?: return false
+                            val transport = resultMsg?.obj as? WebView.WebViewTransport ?: return false
+                            val tempWebView = WebView(ctx).apply {
+                                webViewClient = object : WebViewClient() {
+                                    override fun shouldOverrideUrlLoading(
+                                        popupView: WebView?,
+                                        request: WebResourceRequest?,
+                                    ): Boolean {
+                                        val targetUrl = request?.url?.toString()
+                                        if (!targetUrl.isNullOrBlank()) {
+                                            bridge.openExternalUrl(targetUrl)
+                                        }
+                                        popupView?.post { popupView.destroy() }
+                                        return true
+                                    }
+                                }
+                            }
+                            transport.webView = tempWebView
+                            resultMsg.sendToTarget()
                             return true
                         }
                     }
@@ -1313,6 +1622,7 @@ fun FlashoraHostScreen(
                 }
             },
         )
+        }
 
         AnimatedVisibility(
             visible = !isPageLoaded,

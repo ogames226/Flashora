@@ -14,5 +14,9 @@
     <string name="browser_download_failed">تعذر تحميل الملف من الرابط</string>
     <string name="browser_html_error">الرابط أعاد صفحة ويب وليس ملف لعبة SWF/EXE. افتح الموقع واضغط «التقاط SWF»</string>
     <string name="browser_zip_no_swf">الأرشيف ZIP لا يحتوي على ملف SWF أو EXE صالح</string>
+    <string name="browser_open_external_error">تعذر فتح الرابط في المتصفح الخارجي</string>
     <string name="cancel">إلغاء</string>
+    <string name="cover_url_invalid">الرابط غير صالح. أدخل رابطاً يبدأ بـ http أو https</string>
+    <string name="cover_url_not_image">الرابط لا يشير إلى صورة صالحة (JPG أو PNG أو WebP)</string>
+    <string name="cover_url_fetch_failed">تعذر تحميل الصورة من الرابط. تأكد من الرابط والاتصال بالإنترنت</string>
 </resources>
