@@ -195,7 +195,7 @@
       max-width: 1120px;
       margin: 0 auto;
       min-height: 100%;
-      padding: calc(14px + env(safe-area-inset-top)) 16px calc(168px + env(safe-area-inset-bottom));
+      padding: calc(14px + env(safe-area-inset-top)) 16px calc(184px + env(safe-area-inset-bottom));
       position: relative;
       overflow-x: clip;
     }
@@ -784,36 +784,106 @@
     }
 
     /* ===== Settings ===== */
+    .settings-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 16px;
+    }
     .settings-group {
       padding: 16px;
-      margin-bottom: 14px;
+      margin: 0;
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
+    .settings-group .section-title {
+      margin: 0 0 2px;
+      padding-inline-start: 10px;
+      border-inline-start: 3.5px solid var(--secondary);
+      font-size: 16px;
+      line-height: 1.3;
+    }
     .setting-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
-      justify-content: space-between;
       gap: 12px;
-      flex-wrap: wrap;
       min-width: 0;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    html[data-theme="light"] .setting-row {
+      border-bottom-color: rgba(15, 23, 42, 0.06);
+    }
+    .setting-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .setting-row-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .setting-row-stack:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
     }
     .setting-label {
-      flex: 1 1 180px;
       min-width: 0;
+      text-align: start;
     }
     .setting-label strong {
       display: block;
-      font-size: 14.5px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.35;
     }
     .setting-label small {
+      display: block;
       color: var(--text-muted);
+      font-size: 11.5px;
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+    .setting-control {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+    .setting-control .select-field,
+    .setting-control button {
+      min-width: 138px;
+      max-width: 170px;
+      min-height: 44px;
+      font-size: 13px;
+    }
+    .setting-range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 158px;
+      direction: ltr;
+    }
+    .setting-range-wrap .vol-range {
+      flex: 1 1 auto;
+      width: auto;
+      min-width: 0;
+    }
+    .setting-range-val {
       font-size: 12px;
+      font-weight: 800;
+      color: var(--secondary);
+      min-width: 40px;
+      text-align: right;
     }
     .accent-dots {
       display: flex;
       gap: 10px;
+      justify-content: flex-end;
     }
     .accent-dot {
       width: 32px;
@@ -1010,10 +1080,32 @@
       flex-direction: column;
       overflow: hidden;
       user-select: none;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
     #player-overlay.open {
       display: flex;
       animation: fadeSlideUp 220ms ease;
+    }
+
+    /* Portrait: clean 54% top Game Zone + 46% bottom Control Zone; Landscape: full-stage + overlay controls */
+    .player-main-split {
+      position: relative;
+      flex: 1 1 auto;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 54fr 46fr;
+      grid-template-columns: 100%;
+      overflow: hidden;
+    }
+    #player-overlay.vpad-hidden .player-main-split {
+      grid-template-rows: 100% 0fr;
+    }
+    @media (orientation: landscape) {
+      .player-main-split {
+        display: block;
+      }
     }
 
     .player-hud {
@@ -1022,7 +1114,7 @@
       right: 0;
       z-index: 220;
       padding: 10px 14px;
-      background: linear-gradient(180deg, rgba(11, 15, 30, 0.9), rgba(11, 15, 30, 0.55));
+      background: linear-gradient(180deg, rgba(11, 15, 30, 0.92), rgba(11, 15, 30, 0.62));
       backdrop-filter: blur(12px);
       display: flex;
       align-items: center;
@@ -1039,7 +1131,7 @@
       top: auto;
       bottom: 0;
       padding-bottom: max(10px, env(safe-area-inset-bottom));
-      background: linear-gradient(0deg, rgba(11, 15, 30, 0.92), rgba(11, 15, 30, 0.65));
+      background: linear-gradient(0deg, rgba(11, 15, 30, 0.94), rgba(11, 15, 30, 0.68));
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       flex-wrap: wrap;
     }
@@ -1060,7 +1152,7 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 215;
-      background: rgba(21, 27, 51, 0.72);
+      background: rgba(21, 27, 51, 0.78);
       border: 1px solid rgba(255, 255, 255, 0.16);
       color: #FFFFFF;
       border-radius: 999px;
@@ -1074,20 +1166,28 @@
       transition: opacity 240ms ease;
     }
     .hud-reveal-pill.visible {
-      opacity: 0.9;
+      opacity: 0.92;
       pointer-events: auto;
     }
 
     .player-stage-wrap {
-      flex: 1;
       width: 100%;
       height: 100%;
+      min-height: 0;
       display: grid;
       place-items: center;
       position: relative;
       overflow: hidden;
       touch-action: none;
+      background: #050711;
     }
+    @media (orientation: landscape) {
+      .player-stage-wrap {
+        position: absolute;
+        inset: 0;
+      }
+    }
+
     #ruffle-mount {
       width: 100%;
       height: 100%;
@@ -1098,6 +1198,9 @@
       touch-action: none;
       -webkit-user-select: none;
       user-select: none;
+      border-radius: 0;
+      clip-path: none;
+      overflow: hidden;
     }
     #ruffle-mount.rotated-90 {
       transform: rotate(90deg);
@@ -1107,15 +1210,45 @@
     #ruffle-mount ruffle-player {
       width: 100%;
       height: 100%;
+      max-width: 100%;
+      max-height: 100%;
       display: block;
       touch-action: none;
       outline: none;
+      border-radius: 0 !important;
+      clip-path: none !important;
+      object-fit: contain;
+    }
+    #ruffle-mount.scale-fill ruffle-player {
+      object-fit: fill;
     }
     #ruffle-mount.scale-original ruffle-player {
-      width: auto !important;
-      height: auto !important;
+      width: var(--swf-orig-w, auto) !important;
+      height: var(--swf-orig-h, auto) !important;
       max-width: 100%;
       max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* Optional flat CRT Scanlines overlay (OFF by default; zero barrel distortion) */
+    #crt-scanlines-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 204;
+      pointer-events: none;
+      display: none;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0) 0px,
+          rgba(0, 0, 0, 0) 2px,
+          rgba(0, 0, 0, 0.24) 3px,
+          rgba(0, 0, 0, 0.24) 4px
+        );
+      opacity: 0.72;
+    }
+    #player-stage-wrap.crt-enabled #crt-scanlines-overlay {
+      display: block;
     }
 
     .player-loader {
@@ -1201,208 +1334,52 @@
       border-color: var(--primary-a);
     }
 
-    /* ===== Virtual Touch Gamepad ===== */
+    /* ===== Virtual Touch Gamepad (Portrait Split Dock & Landscape Edge Overlay) ===== */
     #virtual-pad {
-      position: absolute;
-      inset: 0;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
       z-index: 212;
-      pointer-events: none;
+      pointer-events: auto;
       display: none;
       direction: ltr;
+      background: linear-gradient(180deg, rgba(9, 13, 27, 0.98) 0%, #050711 100%);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      touch-action: none;
       --vpad-scale: 1;
+      --pad-w: 390px;
+      --pad-h: 360px;
+      --pad-opacity: 0.85;
+      opacity: var(--pad-opacity);
     }
     #virtual-pad.active { display: block; }
 
-    .vpad-left-cluster {
-      position: absolute;
-      bottom: max(76px, calc(66px + env(safe-area-inset-bottom)));
-      left: max(16px, env(safe-area-inset-left));
-      transform-origin: bottom left;
-      transform: scale(var(--vpad-scale));
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
-      pointer-events: none;
+    @media (orientation: landscape) {
+      #virtual-pad {
+        position: absolute;
+        inset: 0;
+        background: transparent;
+        border-top: none;
+        pointer-events: none;
+        --pad-w: 100vw;
+        --pad-h: 100vh;
+        --pad-opacity: 0.55;
+      }
     }
 
-    .vpad-right-cluster {
-      position: absolute;
-      bottom: max(76px, calc(66px + env(safe-area-inset-bottom)));
-      right: max(16px, env(safe-area-inset-right));
-      transform-origin: bottom right;
-      transform: scale(var(--vpad-scale));
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 10px;
-      pointer-events: none;
-    }
-
-    .vpad-shoulder-btn {
-      padding: 7px 18px;
-      min-width: 64px;
-      min-height: 36px;
-      border-radius: 12px;
-      background: rgba(21, 27, 51, 0.56);
-      border: 1.5px solid rgba(255, 255, 255, 0.3);
-      color: #FFFFFF;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
-      backdrop-filter: blur(6px);
+    #virtual-pad.editing-layout {
       pointer-events: auto;
-      touch-action: none;
-      user-select: none;
+      background-image:
+        linear-gradient(to right, rgba(0, 229, 255, 0.09) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 229, 255, 0.09) 1px, transparent 1px);
+      background-size: 4% 4%;
     }
-    .vpad-shoulder-btn.pressed {
-      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
-      border-color: var(--secondary);
-      transform: translate(-50%, -50%) scale(calc(var(--vpad-scale, 1) * var(--wscale, 1) * 0.94));
-    }
-
-    .vpad-joystick-zone {
-      position: relative;
-      width: 138px;
-      height: 138px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(21, 27, 51, 0.55) 45%, rgba(0, 229, 255, 0.14) 100%);
-      border: 2px solid rgba(0, 229, 255, 0.38);
-      backdrop-filter: blur(5px);
-      pointer-events: auto;
-      touch-action: none;
-      display: grid;
-      place-items: center;
-    }
-    .vpad-stick-knob {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
-      box-shadow: 0 0 18px var(--primary-glow);
-      border: 2px solid rgba(255, 255, 255, 0.72);
-      transition: transform 30ms linear;
-      pointer-events: none;
-    }
-
-    .vpad-dpad-zone {
-      position: relative;
-      width: 144px;
-      height: 144px;
-      pointer-events: auto;
-      touch-action: none;
-      display: none;
-    }
-    #virtual-pad[data-stick="dpad"] .vpad-joystick-zone { display: none; }
-    #virtual-pad[data-stick="dpad"] .vpad-dpad-zone { display: block; }
-
-    .vpad-dkey {
-      position: absolute;
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: rgba(21, 27, 51, 0.62);
-      border: 1.8px solid rgba(0, 229, 255, 0.35);
-      color: #FFFFFF;
-      font-size: 16px;
-      font-weight: 800;
-      display: grid;
-      place-items: center;
-      backdrop-filter: blur(6px);
-      pointer-events: none;
-      user-select: none;
-      transition: transform 70ms ease, background 70ms ease;
-    }
-    .vpad-dkey.pressed {
-      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
-      border-color: var(--secondary);
-      transform: scale(0.92);
-      box-shadow: 0 0 14px var(--secondary);
-    }
-    .vpad-dkey-up { top: 0; left: 48px; }
-    .vpad-dkey-down { bottom: 0; left: 48px; }
-    .vpad-dkey-left { top: 48px; left: 0; }
-    .vpad-dkey-right { top: 48px; right: 0; }
-    .vpad-dkey-center {
-      position: absolute;
-      top: 48px;
-      left: 48px;
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: rgba(21, 27, 51, 0.32);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      pointer-events: none;
-    }
-
-    .vpad-buttons-zone {
-      position: relative;
-      width: 154px;
-      height: 154px;
-      pointer-events: auto;
-      touch-action: none;
-    }
-    .vpad-btn {
-      position: absolute;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: rgba(21, 27, 51, 0.6);
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      color: #FFFFFF;
-      font-weight: 800;
-      font-size: 14px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      line-height: 1.05;
-      backdrop-filter: blur(6px);
-      user-select: none;
-      touch-action: none;
-    }
-    .vpad-btn small {
-      font-size: 9px;
-      font-weight: 700;
-      color: var(--secondary);
-      opacity: 0.9;
-    }
-    .vpad-btn.pressed {
-      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
-      border-color: var(--secondary);
-      transform: scale(0.92);
-      box-shadow: 0 0 18px var(--secondary);
-    }
-    .vpad-btn-y { top: 0; left: 51px; }
-    .vpad-btn-x { top: 51px; left: 0; }
-    .vpad-btn-b { top: 51px; right: 0; }
-    .vpad-btn-a { bottom: 0; left: 51px; border-color: var(--secondary); }
-
-    .vpad-mini-row {
-      position: absolute;
-      top: max(68px, calc(60px + env(safe-area-inset-top)));
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-      pointer-events: auto;
-    }
-    .vpad-pill {
-      padding: 6px 14px;
-      min-height: 32px;
-      border-radius: 999px;
-      background: rgba(21, 27, 51, 0.56);
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      color: #FFFFFF;
-      font-size: 11px;
-      font-weight: 800;
-      touch-action: none;
-      user-select: none;
-    }
-    .vpad-pill.pressed {
-      background: var(--secondary);
-      color: #0B0F1E;
-      transform: translate(-50%, -50%) scale(calc(var(--vpad-scale, 1) * var(--wscale, 1) * 0.94));
+    @media (orientation: landscape) {
+      #virtual-pad.editing-layout {
+        background-color: rgba(5, 7, 17, 0.36);
+      }
     }
 
     .preset-pills {
@@ -1411,18 +1388,20 @@
       gap: 6px;
     }
     .preset-pill {
-      padding: 7px 11px;
+      padding: 8px 12px;
+      min-height: 40px;
       border-radius: 999px;
       background: var(--surface-elevated);
       border: 1px solid var(--border);
       color: var(--text);
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
     }
     .preset-pill:hover, .preset-pill.active {
       border-color: var(--secondary);
       color: var(--secondary);
+      background: rgba(0, 229, 255, 0.1);
     }
 
     /* ===== Unified Control Widgets, Layout Editor, Virtual Keyboard & Tester ===== */
@@ -1507,11 +1486,11 @@
       cursor: pointer;
     }
 
-    /* Modular freely positionable virtual pad widgets */
+    /* Modular freely positionable virtual pad widgets (Relative %, clamp 48px..84px) */
     .vpad-widget {
       position: absolute;
-      left: var(--vx, 12%);
-      top: var(--vy, 72%);
+      left: var(--vx, 24%);
+      top: var(--vy, 62%);
       transform: translate(-50%, -50%) scale(calc(var(--vpad-scale, 1) * var(--wscale, 1)));
       transform-origin: center center;
       pointer-events: auto;
@@ -1524,7 +1503,7 @@
     }
     #virtual-pad.editing-layout .vpad-widget {
       outline: 2px dashed rgba(0, 229, 255, 0.72);
-      outline-offset: 4px;
+      outline-offset: 3px;
       border-radius: 16px;
       cursor: move;
     }
@@ -1537,31 +1516,171 @@
       outline: 2.5px solid var(--primary-a);
       box-shadow: 0 0 18px var(--primary-glow);
     }
+    #virtual-pad.editing-layout .vpad-widget.invalid-ctrl {
+      outline: 2.5px solid #FF3355 !important;
+      background-color: rgba(255, 51, 85, 0.35) !important;
+      box-shadow: 0 0 16px rgba(255, 51, 85, 0.78) !important;
+    }
+
+    .vpad-shoulder-btn {
+      width: clamp(48px, calc(var(--pad-w) * 0.17), 84px);
+      height: clamp(48px, calc(var(--pad-w) * 0.08), 84px);
+      padding: 0 6px;
+      border-radius: 13px;
+      background: rgba(21, 27, 51, 0.76);
+      border: 1.5px solid rgba(255, 255, 255, 0.32);
+      color: #FFFFFF;
+      font-size: clamp(11px, calc(var(--pad-w) * 0.03), 14px);
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      touch-action: none;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .vpad-shoulder-btn.pressed {
+      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
+      border-color: var(--secondary);
+      transform: translate(-50%, -50%) scale(calc(var(--vpad-scale, 1) * var(--wscale, 1) * 0.93));
+    }
+
+    .vpad-pill {
+      width: clamp(48px, calc(var(--pad-w) * 0.18), 110px);
+      height: clamp(48px, calc(var(--pad-w) * 0.09), 56px);
+      padding: 0 6px;
+      border-radius: 999px;
+      background: rgba(21, 27, 51, 0.72);
+      border: 1.2px solid rgba(255, 255, 255, 0.28);
+      color: #FFFFFF;
+      font-size: clamp(9.5px, calc(var(--pad-w) * 0.025), 12px);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      touch-action: none;
+      user-select: none;
+    }
+    .vpad-pill.pressed {
+      background: var(--secondary);
+      color: #0B0F1E;
+      transform: translate(-50%, -50%) scale(calc(var(--vpad-scale, 1) * var(--wscale, 1) * 0.93));
+    }
+
+    .vpad-joystick-zone {
+      position: relative;
+      width: min(calc(var(--pad-w) * 0.34), calc(var(--pad-h) * 0.48));
+      height: min(calc(var(--pad-w) * 0.34), calc(var(--pad-h) * 0.48));
+      min-width: 112px;
+      min-height: 112px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(21, 27, 51, 0.72) 45%, rgba(0, 229, 255, 0.16) 100%);
+      border: 2px solid rgba(0, 229, 255, 0.42);
+      backdrop-filter: blur(5px);
+      pointer-events: auto;
+      touch-action: none;
+      display: grid;
+      place-items: center;
+    }
+    .vpad-stick-knob {
+      width: 42%;
+      height: 42%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
+      box-shadow: 0 0 18px var(--primary-glow);
+      border: 2px solid rgba(255, 255, 255, 0.75);
+      transition: transform 30ms linear;
+      pointer-events: none;
+    }
+
+    .vpad-dpad-zone {
+      position: relative;
+      width: min(calc(var(--pad-w) * 0.34), calc(var(--pad-h) * 0.48));
+      height: min(calc(var(--pad-w) * 0.34), calc(var(--pad-h) * 0.48));
+      min-width: 112px;
+      min-height: 112px;
+      pointer-events: auto;
+      touch-action: none;
+      display: none;
+    }
+    #virtual-pad[data-stick="dpad"] .vpad-joystick-zone { display: none; }
+    #virtual-pad[data-stick="dpad"] .vpad-dpad-zone { display: block; }
+
+    .vpad-dkey {
+      position: absolute;
+      width: 33.33%;
+      height: 33.33%;
+      border-radius: 11px;
+      background: rgba(21, 27, 51, 0.75);
+      border: 1.5px solid rgba(0, 229, 255, 0.38);
+      color: #FFFFFF;
+      font-size: clamp(12px, calc(var(--pad-w) * 0.036), 18px);
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+      user-select: none;
+      transition: transform 70ms ease, background 70ms ease;
+    }
+    .vpad-dkey.pressed {
+      background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
+      border-color: var(--secondary);
+      transform: scale(0.92);
+      box-shadow: 0 0 14px var(--secondary);
+    }
+    .vpad-dkey-up { top: 0; left: 33.33%; }
+    .vpad-dkey-down { bottom: 0; left: 33.33%; }
+    .vpad-dkey-left { top: 33.33%; left: 0; }
+    .vpad-dkey-right { top: 33.33%; right: 0; }
+    .vpad-dkey-center {
+      position: absolute;
+      top: 33.33%;
+      left: 33.33%;
+      width: 33.33%;
+      height: 33.33%;
+      border-radius: 10px;
+      background: rgba(21, 27, 51, 0.36);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      pointer-events: none;
+    }
 
     .vpad-action-single {
-      width: 54px;
-      height: 54px;
+      width: clamp(48px, calc(var(--pad-w) * 0.15), 84px);
+      height: clamp(48px, calc(var(--pad-w) * 0.15), 84px);
       border-radius: 50%;
-      background: rgba(21, 27, 51, 0.64);
-      border: 2px solid rgba(255, 255, 255, 0.38);
+      background: rgba(21, 27, 51, 0.72);
+      border: 2px solid rgba(255, 255, 255, 0.4);
       color: #FFFFFF;
       font-weight: 800;
-      font-size: 14px;
+      font-size: clamp(13px, calc(var(--pad-w) * 0.036), 18px);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      line-height: 1.05;
+      line-height: 1.02;
+      padding: 2px;
+      overflow: hidden;
       backdrop-filter: blur(6px);
       user-select: none;
       touch-action: none;
       cursor: pointer;
     }
     .vpad-action-single small {
-      font-size: 9px;
+      font-size: clamp(8px, calc(var(--pad-w) * 0.021), 10.5px);
       font-weight: 700;
       color: var(--secondary);
       opacity: 0.92;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .vpad-action-single.pressed {
       background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
@@ -1570,6 +1689,32 @@
       box-shadow: 0 0 18px var(--secondary);
     }
     .vpad-action-single[data-vcmd="a"] { border-color: var(--secondary); }
+
+    @media (orientation: landscape) {
+      .vpad-shoulder-btn {
+        width: clamp(48px, calc(var(--pad-w) * 0.088), 78px);
+        height: clamp(48px, calc(var(--pad-h) * 0.13), 56px);
+        font-size: 12px;
+      }
+      .vpad-pill {
+        width: clamp(54px, calc(var(--pad-w) * 0.09), 86px);
+        height: clamp(38px, calc(var(--pad-h) * 0.1), 48px);
+        font-size: 10.5px;
+      }
+      .vpad-joystick-zone,
+      .vpad-dpad-zone {
+        width: clamp(104px, calc(var(--pad-h) * 0.34), 160px);
+        height: clamp(104px, calc(var(--pad-h) * 0.34), 160px);
+      }
+      .vpad-action-single {
+        width: clamp(48px, calc(var(--pad-h) * 0.14), 72px);
+        height: clamp(48px, calc(var(--pad-h) * 0.14), 72px);
+        font-size: 14px;
+      }
+      .vpad-action-single small {
+        font-size: 9px;
+      }
+    }
 
     .vpad-joystick-zone.floating-mode {
       border-style: dashed;
@@ -1584,14 +1729,14 @@
       z-index: 235;
       width: calc(100% - 20px);
       max-width: 640px;
-      background: rgba(15, 21, 42, 0.94);
+      background: rgba(15, 21, 42, 0.95);
       border: 1.5px solid var(--secondary);
       border-radius: 18px;
       padding: 10px 12px;
       display: none;
       flex-direction: column;
       gap: 8px;
-      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(12px);
       direction: inherit;
     }
@@ -1602,6 +1747,21 @@
       justify-content: space-between;
       gap: 8px;
       flex-wrap: wrap;
+    }
+    #vpad-editor-warning {
+      display: none;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #FFD6DE;
+      background: rgba(255, 51, 85, 0.25);
+      border: 1px solid #FF3355;
+      border-radius: 10px;
+      padding: 6px 10px;
+    }
+    #vpad-editor-warning.visible { display: block; }
+    #btn-vpad-ed-done.save-blocked {
+      opacity: 0.45;
+      filter: grayscale(0.5);
     }
 
     /* Floating Virtual Keyboard Toggle & Panel */
@@ -2534,233 +2694,366 @@
 
     <!-- TAB 4: SETTINGS -->
     <section id="view-settings" class="tab-view">
-      <div class="glass-card settings-group">
-        <h3 class="section-title" data-i18n="settings_appearance">المظهر واللغة</h3>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_lang">لغة الواجهة</strong>
-            <small data-i18n="setting_lang_sub">العربية (RTL) أو الإنجليزية (LTR)</small>
-          </div>
-          <select id="set-lang" class="select-field">
-            <option value="ar">العربية (RTL)</option>
-            <option value="en">English (LTR)</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_theme">الوضع اللوني</strong>
-            <small data-i18n="setting_theme_sub">داكن نيون أو فاتح مريح</small>
-          </div>
-          <select id="set-theme" class="select-field">
-            <option value="dark" data-i18n="theme_dark">داكن</option>
-            <option value="light" data-i18n="theme_light">فاتح</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_accent">اللون الأساسي</strong>
-            <small data-i18n="setting_accent_sub">تدرج الأزرار والهوية</small>
-          </div>
-          <div class="accent-dots" id="accent-dots">
-            <button type="button" class="accent-dot" data-accent="flash" style="background:linear-gradient(135deg,#FF6A00,#FF2E63)" title="Flash"></button>
-            <button type="button" class="accent-dot" data-accent="violet" style="background:linear-gradient(135deg,#8B5CF6,#EC4899)" title="Violet"></button>
-            <button type="button" class="accent-dot" data-accent="cyber" style="background:linear-gradient(135deg,#00E5FF,#2563EB)" title="Cyber"></button>
-            <button type="button" class="accent-dot" data-accent="emerald" style="background:linear-gradient(135deg,#10E88A,#0EA5E9)" title="Emerald"></button>
-          </div>
-        </div>
-      </div>
+      <div class="settings-stack">
+        <!-- 1. التحكم -->
+        <div class="glass-card settings-group" id="settings-controls-card">
+          <h3 class="section-title" data-i18n="settings_controls_title">التحكم</h3>
 
-      <div class="glass-card settings-group">
-        <h3 class="section-title" data-i18n="settings_player">إعدادات المشغّل الافتراضية</h3>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_quality">جودة الرسم الافتراضية</strong>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_vpad">لوحة التحكم اللمسية</strong>
+              <small data-i18n="setting_vpad_sub">تظهر تلقائياً على شاشات اللمس</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-vpad" class="select-field">
+                <option value="auto" data-i18n="vpad_auto">تلقائي (الجوال)</option>
+                <option value="always" data-i18n="vpad_always">مفعلة دائماً</option>
+                <option value="off" data-i18n="vpad_off">معطلة</option>
+              </select>
+            </div>
           </div>
-          <select id="set-quality" class="select-field">
-            <option value="low" data-i18n="q_low">منخفضة</option>
-            <option value="medium" data-i18n="q_med">متوسطة</option>
-            <option value="high" data-i18n="q_high">عالية</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_scale">وضع التحجيم الافتراضي</strong>
-          </div>
-          <select id="set-scale" class="select-field">
-            <option value="fit" data-i18n="scale_fit">ملاءمة</option>
-            <option value="fill" data-i18n="scale_fill">ملء الشاشة</option>
-            <option value="original" data-i18n="scale_orig">الحجم الأصلي</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_volume">مستوى الصوت الافتراضي</strong>
-          </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <input id="set-volume" type="range" min="0" max="100" step="5" class="vol-range" style="width:120px;" />
-            <span id="set-volume-val" style="font-weight:800; min-width:38px;">85%</span>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_renderer">محرك العرض الرسومي</strong>
-            <small data-i18n="setting_renderer_sub">جرّب Canvas إذا ظهرت شاشة سوداء</small>
-          </div>
-          <select id="set-renderer" class="select-field">
-            <option value="auto" data-i18n="rend_auto">تلقائي</option>
-            <option value="webgl" data-i18n="rend_webgl">WebGL (سريع)</option>
-            <option value="canvas" data-i18n="rend_canvas">Canvas (متوافق)</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_vpad">لوحة التحكم اللمسية</strong>
-            <small data-i18n="setting_vpad_sub">تظهر تلقائياً على شاشات اللمس</small>
-          </div>
-          <select id="set-vpad" class="select-field">
-            <option value="auto" data-i18n="vpad_auto">تلقائي (الجوال)</option>
-            <option value="always" data-i18n="vpad_always">مفعلة دائماً</option>
-            <option value="off" data-i18n="vpad_off">معطلة</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="glass-card settings-group" id="settings-controls-card">
-        <h3 class="section-title" data-i18n="settings_controls_title">التحكم</h3>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="setting_keymap">ضبط التحكم والربط الشامل</strong>
-            <small data-i18n="setting_keymap_sub">يد التحكم، الكيبورد، الماوس، وأزرار اللمس</small>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="vpad_stick_style">شكل أزرار الحركة</strong>
+              <small data-i18n="setting_stick_sub">عصا ثابتة، عائمة، أو أسهم متقاطعة</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-vpad-stick" class="select-field">
+                <option value="joystick" data-i18n="vpad_stick_joy">عصا ثابتة</option>
+                <option value="floating" data-i18n="vpad_stick_float">عصا عائمة</option>
+                <option value="dpad" data-i18n="vpad_stick_dpad">أسهم (D-Pad)</option>
+              </select>
+            </div>
           </div>
-          <button id="btn-open-keymap-settings" class="btn-outline" style="min-height:48px; padding:8px 14px;" type="button" data-i18n="ctrl_open_btn">ضبط التحكم</button>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="gp_tester_title">اختبار يد التحكم</strong>
-            <small data-i18n="gp_tester_sub">فحص الأزرار والعصي والاهتزاز (حتى 4 أيدٍ)</small>
-          </div>
-          <button id="btn-open-gp-tester-settings" class="btn-ghost" style="min-height:48px;" type="button" data-i18n="gp_tester_btn">اختبار اليد</button>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="profiles_title">ملفات التحكم (Profiles)</strong>
-            <small data-i18n="profiles_sub">حفظ وتبديل إعدادات عامة أو مخصصة لكل لعبة</small>
-          </div>
-          <button id="btn-open-profiles-settings" class="btn-ghost" style="min-height:48px;" type="button" data-i18n="profiles_btn">إدارة الملفات</button>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="ctrl_autohide_touch">إخفاء اللمس عند توصيل اليد</strong>
-            <small data-i18n="ctrl_autohide_touch_sub">تُستعاد تلقائياً عند فصل يد التحكم</small>
-          </div>
-          <select id="set-autohide-touch" class="select-field">
-            <option value="on" data-i18n="enabled">مفعّل</option>
-            <option value="off" data-i18n="disabled">معطّل</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="touch_haptic_label">اهتزاز خفيف عند اللمس</strong>
-          </div>
-          <select id="set-touch-haptic" class="select-field">
-            <option value="on" data-i18n="enabled">مفعّل</option>
-            <option value="off" data-i18n="disabled">معطّل</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="glass-card settings-group" id="settings-lock-card">
-        <h3 class="section-title" data-i18n="settings_lock_title">القفل</h3>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="lock_unlock_method">طريقة فتح القفل</strong>
-            <small data-i18n="lock_unlock_method_sub">منع فتح القفل بالخطأ أثناء اللعب</small>
+          <div class="setting-row-stack">
+            <div class="setting-label">
+              <strong data-i18n="setting_vpad_presets">قوالب تخطيط اللمس</strong>
+              <small data-i18n="setting_vpad_presets_sub">اختر تخطيطاً جاهزاً للوضع الحالي أو خصّص بالسحب</small>
+            </div>
+            <div class="preset-pills" id="settings-touch-presets">
+              <button type="button" class="preset-pill" data-tpreset="default" data-i18n="tpreset_default">افتراضي</button>
+              <button type="button" class="preset-pill" data-tpreset="one_handed" data-i18n="tpreset_one_handed">يد واحدة</button>
+              <button type="button" class="preset-pill" data-tpreset="arcade" data-i18n="tpreset_arcade">أركيد</button>
+              <button type="button" class="preset-pill" data-tpreset="dos" data-i18n="tpreset_dos">DOS</button>
+              <button type="button" class="preset-pill" data-tpreset="racing" data-i18n="tpreset_racing">سباق</button>
+              <button type="button" class="preset-pill" data-tpreset="platformer" data-i18n="tpreset_platformer">منصات</button>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button id="btn-settings-touch-editor" class="btn-outline" style="flex:1; min-width:150px; min-height:44px;" type="button" data-i18n="vpad_open_editor">تعديل التخطيط (سحب وتكبير)</button>
+              <button id="btn-settings-reset-layout" class="btn-ghost" style="min-height:44px;" type="button" data-i18n="vpad_reset_layout">إعادة التخطيط الافتراضي</button>
+            </div>
           </div>
-          <select id="set-lock-method" class="select-field">
-            <option value="long_press" data-i18n="unlock_long_press">ضغط مطوّل ثانيتين</option>
-            <option value="triple_tap_corner" data-i18n="unlock_triple_tap">3 نقرات في الركن العلوي</option>
-            <option value="gamepad_combo" data-i18n="unlock_gp_combo">يد التحكم (Start + Select)</option>
-            <option value="back_button" data-i18n="unlock_back_twice">زر الرجوع مرتين</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="lock_btn_corner">موضع زر القفل</strong>
-          </div>
-          <select id="set-lock-corner" class="select-field">
-            <option value="top-left" data-i18n="corner_tl">أعلى اليسار</option>
-            <option value="top-right" data-i18n="corner_tr">أعلى اليمين</option>
-            <option value="bottom-left" data-i18n="corner_bl">أسفل اليسار</option>
-            <option value="bottom-right" data-i18n="corner_br">أسفل اليمين</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="lock_btn_size">حجم زر القفل</strong>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <input id="set-lock-size" type="range" min="40" max="68" step="2" class="vol-range" style="width:110px;" />
-            <span id="set-lock-size-val" style="font-size:12px; font-weight:800; min-width:40px;">48px</span>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="lock_btn_opacity">شفافية زر القفل عند القفل</strong>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <input id="set-lock-opacity" type="range" min="20" max="100" step="5" class="vol-range" style="width:110px;" />
-            <span id="set-lock-opacity-val" style="font-size:12px; font-weight:800; min-width:38px;">65%</span>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="lock_auto_start">تفعيل القفل تلقائياً عند بدء اللعبة</strong>
-          </div>
-          <select id="set-lock-auto" class="select-field">
-            <option value="off" data-i18n="disabled">معطّل</option>
-            <option value="on" data-i18n="enabled">مفعّل</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="lock_haptic">اهتزاز خفيف عند فتح القفل</strong>
-          </div>
-          <select id="set-lock-haptic" class="select-field">
-            <option value="on" data-i18n="enabled">مفعّل</option>
-            <option value="off" data-i18n="disabled">معطّل</option>
-          </select>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">
-            <strong data-i18n="lock_keep_awake">إبقاء الشاشة مضاءة أثناء القفل</strong>
-          </div>
-          <select id="set-lock-awake" class="select-field">
-            <option value="on" data-i18n="enabled">مفعّل</option>
-            <option value="off" data-i18n="disabled">معطّل</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="glass-card settings-group">
-        <h3 class="section-title" data-i18n="settings_storage">التخزين والبيانات</h3>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button id="btn-clear-cache" class="btn-ghost" type="button" data-i18n="clear_cache">مسح كاش المحاكي</button>
-          <button id="btn-clear-library" class="btn-ghost btn-danger" type="button" data-i18n="clear_library">مسح المكتبة بالكامل</button>
-        </div>
-      </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="vpad_scale">حجم الأزرار</strong>
+            </div>
+            <div class="setting-range-wrap">
+              <input id="set-vpad-scale" type="range" min="75" max="135" step="5" class="vol-range" />
+              <span id="set-vpad-scale-val" class="setting-range-val">100%</span>
+            </div>
+          </div>
 
-      <div class="glass-card settings-group">
-        <h3 class="section-title" data-i18n="about_title">حول التطبيق والمساعدة</h3>
-        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="vpad_opacity">شفافية الأزرار (عمودي)</strong>
+            </div>
+            <div class="setting-range-wrap">
+              <input id="set-vpad-opacity" type="range" min="25" max="100" step="5" class="vol-range" />
+              <span id="set-vpad-opacity-val" class="setting-range-val">85%</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_vpad_opacity_land">شفافية الأزرار (أفقي)</strong>
+            </div>
+            <div class="setting-range-wrap">
+              <input id="set-vpad-opacity-land" type="range" min="20" max="95" step="5" class="vol-range" />
+              <span id="set-vpad-opacity-land-val" class="setting-range-val">55%</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="ctrl_autohide_touch">إخفاء اللمس عند توصيل اليد</strong>
+              <small data-i18n="ctrl_autohide_touch_sub">تُستعاد تلقائياً عند فصل يد التحكم</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-autohide-touch" class="select-field">
+                <option value="on" data-i18n="enabled">مفعّل</option>
+                <option value="off" data-i18n="disabled">معطّل</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="touch_haptic_label">اهتزاز خفيف عند اللمس</strong>
+            </div>
+            <div class="setting-control">
+              <select id="set-touch-haptic" class="select-field">
+                <option value="on" data-i18n="enabled">مفعّل</option>
+                <option value="off" data-i18n="disabled">معطّل</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_keymap">ضبط التحكم والربط الشامل</strong>
+              <small data-i18n="setting_keymap_sub">يد التحكم، الكيبورد، الماوس، وأزرار اللمس</small>
+            </div>
+            <div class="setting-control">
+              <button id="btn-open-keymap-settings" class="btn-outline" type="button" data-i18n="ctrl_open_btn">ضبط التحكم</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="gp_tester_title">اختبار يد التحكم</strong>
+              <small data-i18n="gp_tester_sub">فحص الأزرار والعصي والاهتزاز (حتى 4 أيدٍ)</small>
+            </div>
+            <div class="setting-control">
+              <button id="btn-open-gp-tester-settings" class="btn-ghost" type="button" data-i18n="gp_tester_btn">اختبار اليد</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="profiles_title">ملفات التحكم (Profiles)</strong>
+              <small data-i18n="profiles_sub">حفظ وتبديل إعدادات عامة أو مخصصة لكل لعبة</small>
+            </div>
+            <div class="setting-control">
+              <button id="btn-open-profiles-settings" class="btn-ghost" type="button" data-i18n="profiles_btn">إدارة الملفات</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. العرض -->
+        <div class="glass-card settings-group" id="settings-display-card">
+          <h3 class="section-title" data-i18n="settings_display_title">العرض</h3>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_scale">وضع التحجيم الافتراضي</strong>
+              <small data-i18n="setting_scale_sub">يحافظ على نسبة اللعبة الأصلية دون تمطيط</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-scale" class="select-field">
+                <option value="fit" data-i18n="scale_fit">ملاءمة</option>
+                <option value="fill" data-i18n="scale_fill">ملء الشاشة</option>
+                <option value="original" data-i18n="scale_orig">الحجم الأصلي (1:1)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_quality">جودة الرسم الافتراضية</strong>
+            </div>
+            <div class="setting-control">
+              <select id="set-quality" class="select-field">
+                <option value="low" data-i18n="q_low">منخفضة</option>
+                <option value="medium" data-i18n="q_med">متوسطة</option>
+                <option value="high" data-i18n="q_high">عالية</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_renderer">محرك العرض الرسومي</strong>
+              <small data-i18n="setting_renderer_sub">جرّب Canvas إذا ظهرت شاشة سوداء</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-renderer" class="select-field">
+                <option value="auto" data-i18n="rend_auto">تلقائي</option>
+                <option value="webgl" data-i18n="rend_webgl">WebGL (سريع)</option>
+                <option value="canvas" data-i18n="rend_canvas">Canvas (متوافق)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_crt">تأثير Scanlines / CRT</strong>
+              <small data-i18n="setting_crt_sub">خطوط شاشة كلاسيكية اختيارية (مغلق افتراضياً)</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-crt" class="select-field">
+                <option value="off" data-i18n="disabled">معطّل</option>
+                <option value="on" data-i18n="enabled">مفعّل</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_lang">لغة الواجهة</strong>
+              <small data-i18n="setting_lang_sub">العربية (RTL) أو الإنجليزية (LTR)</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-lang" class="select-field">
+                <option value="ar">العربية (RTL)</option>
+                <option value="en">English (LTR)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_theme">الوضع اللوني</strong>
+              <small data-i18n="setting_theme_sub">داكن نيون أو فاتح مريح</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-theme" class="select-field">
+                <option value="dark" data-i18n="theme_dark">داكن</option>
+                <option value="light" data-i18n="theme_light">فاتح</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_accent">اللون الأساسي</strong>
+              <small data-i18n="setting_accent_sub">تدرج الأزرار والهوية</small>
+            </div>
+            <div class="accent-dots" id="accent-dots">
+              <button type="button" class="accent-dot" data-accent="flash" style="background:linear-gradient(135deg,#FF6A00,#FF2E63)" title="Flash"></button>
+              <button type="button" class="accent-dot" data-accent="violet" style="background:linear-gradient(135deg,#8B5CF6,#EC4899)" title="Violet"></button>
+              <button type="button" class="accent-dot" data-accent="cyber" style="background:linear-gradient(135deg,#00E5FF,#2563EB)" title="Cyber"></button>
+              <button type="button" class="accent-dot" data-accent="emerald" style="background:linear-gradient(135deg,#10E88A,#0EA5E9)" title="Emerald"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. الصوت -->
+        <div class="glass-card settings-group" id="settings-audio-card">
+          <h3 class="section-title" data-i18n="settings_audio_title">الصوت</h3>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_volume">مستوى الصوت الافتراضي</strong>
+            </div>
+            <div class="setting-range-wrap">
+              <input id="set-volume" type="range" min="0" max="100" step="5" class="vol-range" />
+              <span id="set-volume-val" class="setting-range-val">85%</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="setting_mute_default">كتم الصوت عند بدء اللعبة</strong>
+            </div>
+            <div class="setting-control">
+              <select id="set-mute-default" class="select-field">
+                <option value="off" data-i18n="disabled">معطّل</option>
+                <option value="on" data-i18n="enabled">مفعّل</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. القفل -->
+        <div class="glass-card settings-group" id="settings-lock-card">
+          <h3 class="section-title" data-i18n="settings_lock_title">القفل</h3>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="lock_unlock_method">طريقة فتح القفل</strong>
+              <small data-i18n="lock_unlock_method_sub">منع فتح القفل بالخطأ أثناء اللعب</small>
+            </div>
+            <div class="setting-control">
+              <select id="set-lock-method" class="select-field">
+                <option value="long_press" data-i18n="unlock_long_press">ضغط مطوّل ثانيتين</option>
+                <option value="triple_tap_corner" data-i18n="unlock_triple_tap">3 نقرات في الركن العلوي</option>
+                <option value="gamepad_combo" data-i18n="unlock_gp_combo">يد التحكم (Start + Select)</option>
+                <option value="back_button" data-i18n="unlock_back_twice">زر الرجوع مرتين</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="lock_btn_corner">موضع زر القفل</strong>
+            </div>
+            <div class="setting-control">
+              <select id="set-lock-corner" class="select-field">
+                <option value="top-left" data-i18n="corner_tl">أعلى اليسار</option>
+                <option value="top-right" data-i18n="corner_tr">أعلى اليمين</option>
+                <option value="bottom-left" data-i18n="corner_bl">أسفل اليسار</option>
+                <option value="bottom-right" data-i18n="corner_br">أسفل اليمين</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="lock_btn_size">حجم زر القفل</strong>
+            </div>
+            <div class="setting-range-wrap">
+              <input id="set-lock-size" type="range" min="40" max="68" step="2" class="vol-range" />
+              <span id="set-lock-size-val" class="setting-range-val">48px</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="lock_btn_opacity">شفافية زر القفل عند القفل</strong>
+            </div>
+            <div class="setting-range-wrap">
+              <input id="set-lock-opacity" type="range" min="20" max="100" step="5" class="vol-range" />
+              <span id="set-lock-opacity-val" class="setting-range-val">65%</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="lock_auto_start">تفعيل القفل تلقائياً عند بدء اللعبة</strong>
+            </div>
+            <div class="setting-control">
+              <select id="set-lock-auto" class="select-field">
+                <option value="off" data-i18n="disabled">معطّل</option>
+                <option value="on" data-i18n="enabled">مفعّل</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="lock_haptic">اهتزاز خفيف عند فتح القفل</strong>
+            </div>
+            <div class="setting-control">
+              <select id="set-lock-haptic" class="select-field">
+                <option value="on" data-i18n="enabled">مفعّل</option>
+                <option value="off" data-i18n="disabled">معطّل</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">
+              <strong data-i18n="lock_keep_awake">إبقاء الشاشة مضاءة أثناء القفل</strong>
+            </div>
+            <div class="setting-control">
+              <select id="set-lock-awake" class="select-field">
+                <option value="on" data-i18n="enabled">مفعّل</option>
+                <option value="off" data-i18n="disabled">معطّل</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. المصادر -->
+        <div class="glass-card settings-group" id="settings-sources-card">
+          <h3 class="section-title" data-i18n="settings_sources_title">المصادر</h3>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="btn-settings-go-sites" class="btn-outline" type="button" data-i18n="go_sites_btn">تصفح مواقع الألعاب</button>
+            <button id="btn-reload-ruffle" class="btn-ghost" type="button" data-i18n="reload_engine">إعادة تحميل Ruffle</button>
+            <button id="btn-clear-cache" class="btn-ghost" type="button" data-i18n="clear_cache">مسح كاش المحاكي</button>
+            <button id="btn-clear-library" class="btn-ghost btn-danger" type="button" data-i18n="clear_library">مسح المكتبة بالكامل</button>
+            <button id="btn-open-help" class="btn-ghost" type="button" data-i18n="help_btn">دليل الاستخدام السريع</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);">
           <img src="data:image/png;base64,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" width="52" height="52" style="border-radius:14px;" alt="Flashora" />
           <div>
             <strong>Flashora | فلاشورا <span style="color:var(--secondary)">v1.0.0</span></strong>
             <div style="font-size:12.5px; color:var(--text-muted);" data-i18n="about_desc">مشغل ألعاب فلاش أوفلاين يعتمد على محاكي Ruffle WebAssembly ومستخرج Flash Projector مدمج.</div>
           </div>
-        </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button id="btn-open-help" class="btn-ghost" type="button" data-i18n="help_btn">دليل الاستخدام السريع</button>
-          <button id="btn-reload-ruffle" class="btn-ghost" type="button" data-i18n="reload_engine">إعادة تحميل Ruffle</button>
         </div>
       </div>
     </section>
@@ -2884,14 +3177,15 @@
         <strong style="font-size:13px; color:var(--secondary);" data-i18n="vpad_editor_title">تعديل تخطيط أزرار اللمس</strong>
         <span id="vpad-editor-selected" style="font-size:11.5px; color:var(--text-muted); font-weight:700;"></span>
         <div style="display:flex; gap:6px;">
-          <button id="btn-vpad-ed-reset" class="btn-ghost" type="button" style="min-height:36px; padding:4px 10px; font-size:11px;" data-i18n="reset_default">استعادة</button>
+          <button id="btn-vpad-ed-reset" class="btn-ghost" type="button" style="min-height:36px; padding:4px 10px; font-size:11px;" data-i18n="vpad_reset_layout">إعادة التخطيط الافتراضي</button>
           <button id="btn-vpad-ed-done" class="btn-primary" type="button" style="min-height:36px; padding:4px 12px; font-size:12px;" data-i18n="save_done">حفظ وإغلاق</button>
         </div>
       </div>
+      <div id="vpad-editor-warning" role="alert"></div>
       <div class="vpad-editor-row">
-        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:160px;">
+        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:145px;">
           <span style="font-size:11.5px; font-weight:700;" data-i18n="ctrl_btn_size">حجم العنصر</span>
-          <input id="vpad-ed-scale" type="range" min="65" max="155" value="100" class="vol-range" style="flex:1;" />
+          <input id="vpad-ed-scale" type="range" min="70" max="150" value="100" class="vol-range" style="flex:1;" />
         </div>
         <button id="btn-vpad-ed-vis" class="btn-outline" type="button" style="min-height:36px; padding:4px 10px; font-size:11.5px;">إخفاء / إظهار</button>
         <select id="vpad-ed-scope" class="hud-select" style="min-height:36px;">
@@ -2899,12 +3193,23 @@
           <option value="global" data-i18n="scope_global">التخطيط العام</option>
         </select>
       </div>
+      <div class="vpad-editor-row">
+        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:140px;">
+          <span style="font-size:11px; font-weight:700;" data-i18n="vpad_global_scale">الحجم العام</span>
+          <input id="vpad-ed-global-scale" type="range" min="75" max="135" step="5" value="100" class="vol-range" style="flex:1;" />
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:140px;">
+          <span style="font-size:11px; font-weight:700;" data-i18n="vpad_global_opacity">الشفافية</span>
+          <input id="vpad-ed-global-opacity" type="range" min="20" max="100" step="5" value="85" class="vol-range" style="flex:1;" />
+        </div>
+      </div>
       <div class="preset-pills" id="vpad-ed-presets">
         <button type="button" class="preset-pill" data-tpreset="default" data-i18n="tpreset_default">افتراضي</button>
+        <button type="button" class="preset-pill" data-tpreset="one_handed" data-i18n="tpreset_one_handed">يد واحدة</button>
         <button type="button" class="preset-pill" data-tpreset="arcade" data-i18n="tpreset_arcade">أركيد</button>
+        <button type="button" class="preset-pill" data-tpreset="dos" data-i18n="tpreset_dos">DOS</button>
         <button type="button" class="preset-pill" data-tpreset="racing" data-i18n="tpreset_racing">سباق</button>
         <button type="button" class="preset-pill" data-tpreset="platformer" data-i18n="tpreset_platformer">منصات</button>
-        <button type="button" class="preset-pill" data-tpreset="dos" data-i18n="tpreset_dos">DOS</button>
       </div>
     </div>
 
@@ -2914,11 +3219,14 @@
       <button class="icon-btn" style="width:30px;height:30px;min-width:30px;" type="button" onclick="document.getElementById('as-notice-banner').classList.remove('visible')">✕</button>
     </div>
 
-    <!-- Stage -->
-    <div id="player-stage-wrap" class="player-stage-wrap">
-      <div id="ruffle-mount"></div>
-      <div id="touchpad-surface"></div>
-      <div id="gp-virtual-cursor"></div>
+    <!-- Split Container: Portrait = 54% Stage + 46% Control Zone | Landscape = Full Stage + Edge Controls -->
+    <div id="player-main-split" class="player-main-split">
+      <!-- Stage -->
+      <div id="player-stage-wrap" class="player-stage-wrap">
+        <div id="ruffle-mount"></div>
+        <div id="crt-scanlines-overlay" aria-hidden="true"></div>
+        <div id="touchpad-surface"></div>
+        <div id="gp-virtual-cursor"></div>
 
       <!-- Loading Progress Overlay -->
       <div id="player-loader" class="player-loader">
@@ -2945,10 +3253,11 @@
 
       <!-- Floating Quick Virtual Keyboard Button -->
       <button id="btn-floating-vkb" type="button" title="لوحة المفاتيح الافتراضية" aria-label="Virtual Keyboard">⌨️</button>
+      </div>
 
-      <!-- Virtual Touch Gamepad (Modular Editable Widgets) -->
+      <!-- Virtual Touch Gamepad (Portrait Control Zone & Landscape Edge Overlay) -->
       <div id="virtual-pad" data-stick="joystick">
-        <div id="ctrl-widget-move" class="vpad-widget" data-ctrl-id="move" style="--vx:14%; --vy:72%; --wscale:1;">
+        <div id="ctrl-widget-move" class="vpad-widget" data-ctrl-id="move" style="--vx:23%; --vy:66%; --wscale:1;">
           <div id="vpad-joystick" class="vpad-joystick-zone">
             <div id="vpad-knob" class="vpad-stick-knob"></div>
           </div>
@@ -2961,32 +3270,32 @@
           </div>
         </div>
 
-        <button class="vpad-widget vpad-action-single" data-ctrl-id="y" data-vcmd="y" data-vkey="y" type="button" style="--vx:86%; --vy:60%; --wscale:1;"><span>Y</span><small></small></button>
-        <button class="vpad-widget vpad-action-single" data-ctrl-id="x" data-vcmd="x" data-vkey="x" type="button" style="--vx:78%; --vy:70%; --wscale:1;"><span>X</span><small></small></button>
-        <button class="vpad-widget vpad-action-single" data-ctrl-id="b" data-vcmd="b" data-vkey="b" type="button" style="--vx:93%; --vy:70%; --wscale:1;"><span>B</span><small></small></button>
-        <button class="vpad-widget vpad-action-single" data-ctrl-id="a" data-vcmd="a" data-vkey="a" type="button" style="--vx:86%; --vy:80%; --wscale:1;"><span>A</span><small></small></button>
+        <button class="vpad-widget vpad-action-single" data-ctrl-id="y" data-vcmd="y" data-vkey="y" type="button" style="--vx:76%; --vy:51%; --wscale:1;"><span>Y</span><small></small></button>
+        <button class="vpad-widget vpad-action-single" data-ctrl-id="x" data-vcmd="x" data-vkey="x" type="button" style="--vx:64.5%; --vy:67%; --wscale:1;"><span>X</span><small></small></button>
+        <button class="vpad-widget vpad-action-single" data-ctrl-id="b" data-vcmd="b" data-vkey="b" type="button" style="--vx:87.5%; --vy:67%; --wscale:1;"><span>B</span><small></small></button>
+        <button class="vpad-widget vpad-action-single" data-ctrl-id="a" data-vcmd="a" data-vkey="a" type="button" style="--vx:76%; --vy:83%; --wscale:1;"><span>A</span><small></small></button>
 
-        <button class="vpad-widget vpad-shoulder-btn" data-ctrl-id="l1" data-vcmd="l1" data-vkey="l1" type="button" style="--vx:10%; --vy:45%; --wscale:1;">L1</button>
-        <button class="vpad-widget vpad-shoulder-btn" data-ctrl-id="l2" data-vcmd="l2" data-vkey="l2" type="button" style="--vx:10%; --vy:34%; --wscale:0.9;">L2</button>
-        <button class="vpad-widget vpad-shoulder-btn" data-ctrl-id="r1" data-vcmd="r1" data-vkey="r1" type="button" style="--vx:90%; --vy:45%; --wscale:1;">R1</button>
-        <button class="vpad-widget vpad-shoulder-btn" data-ctrl-id="r2" data-vcmd="r2" data-vkey="r2" type="button" style="--vx:90%; --vy:34%; --wscale:0.9;">R2</button>
+        <button class="vpad-widget vpad-shoulder-btn" data-ctrl-id="l2" data-vcmd="l2" data-vkey="l2" type="button" style="--vx:13%; --vy:12%; --wscale:1;">L2</button>
+        <button class="vpad-widget vpad-shoulder-btn" data-ctrl-id="l1" data-vcmd="l1" data-vkey="l1" type="button" style="--vx:32.5%; --vy:12%; --wscale:1;">L1</button>
+        <button class="vpad-widget vpad-shoulder-btn" data-ctrl-id="r1" data-vcmd="r1" data-vkey="r1" type="button" style="--vx:67.5%; --vy:12%; --wscale:1;">R1</button>
+        <button class="vpad-widget vpad-shoulder-btn" data-ctrl-id="r2" data-vcmd="r2" data-vkey="r2" type="button" style="--vx:87%; --vy:12%; --wscale:1;">R2</button>
 
-        <button class="vpad-widget vpad-pill" data-ctrl-id="l3" data-vcmd="l3" data-vkey="l3" data-hidden="true" type="button" style="--vx:27%; --vy:82%; --wscale:0.95;">L3</button>
-        <button class="vpad-widget vpad-pill" data-ctrl-id="r3" data-vcmd="r3" data-vkey="r3" data-hidden="true" type="button" style="--vx:68%; --vy:82%; --wscale:0.95;">R3</button>
+        <button class="vpad-widget vpad-pill" data-ctrl-id="l3" data-vcmd="l3" data-vkey="l3" data-hidden="true" type="button" style="--vx:46%; --vy:86%; --wscale:0.9;">L3</button>
+        <button class="vpad-widget vpad-pill" data-ctrl-id="r3" data-vcmd="r3" data-vkey="r3" data-hidden="true" type="button" style="--vx:54%; --vy:86%; --wscale:0.9;">R3</button>
 
-        <button class="vpad-widget vpad-pill" data-ctrl-id="select" data-vcmd="select" data-vkey="select" type="button" style="--vx:41%; --vy:18%; --wscale:1;">SELECT</button>
-        <button class="vpad-widget vpad-pill" data-ctrl-id="menu" data-vcmd="menu" data-vkey="menu" type="button" style="--vx:50%; --vy:18%; --wscale:1;">MENU</button>
-        <button class="vpad-widget vpad-pill" data-ctrl-id="start" data-vcmd="start" data-vkey="start" type="button" style="--vx:59%; --vy:18%; --wscale:1;">START</button>
+        <button class="vpad-widget vpad-pill" data-ctrl-id="select" data-vcmd="select" data-vkey="select" type="button" style="--vx:29%; --vy:31%; --wscale:1;">SELECT</button>
+        <button class="vpad-widget vpad-pill" data-ctrl-id="menu" data-vcmd="menu" data-vkey="menu" type="button" style="--vx:50%; --vy:31%; --wscale:1;">MENU</button>
+        <button class="vpad-widget vpad-pill" data-ctrl-id="start" data-vcmd="start" data-vkey="start" type="button" style="--vx:71%; --vy:31%; --wscale:1;">START</button>
       </div>
+    </div>
 
-      <!-- Compact On-Screen Virtual Keyboard (DOS / Keyboard-heavy Games) -->
-      <div id="virtual-keyboard">
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0 4px;">
-          <span style="font-size:11px; font-weight:800; color:var(--secondary);" data-i18n="vkb_title">لوحة المفاتيح الافتراضية</span>
-          <button id="btn-close-vkb" type="button" class="vkb-key" style="flex:0 0 auto; min-width:34px; min-height:28px;">✕</button>
-        </div>
-        <div id="vkb-rows"></div>
+    <!-- Compact On-Screen Virtual Keyboard (DOS / Keyboard-heavy Games) -->
+    <div id="virtual-keyboard">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:0 4px;">
+        <span style="font-size:11px; font-weight:800; color:var(--secondary);" data-i18n="vkb_title">لوحة المفاتيح الافتراضية</span>
+        <button id="btn-close-vkb" type="button" class="vkb-key" style="flex:0 0 auto; min-width:34px; min-height:28px;">✕</button>
       </div>
+      <div id="vkb-rows"></div>
     </div>
 
     <!-- Bottom HUD -->
@@ -3301,10 +3610,11 @@
           <div style="font-size:12px; color:var(--text-muted); font-weight:700; margin-bottom:6px;" data-i18n="tpresets_label">قوالب تخطيط اللمس الجاهزة</div>
           <div class="preset-pills" id="ctrl-touch-presets">
             <button type="button" class="preset-pill" data-tpreset="default" data-i18n="tpreset_default">افتراضي</button>
+            <button type="button" class="preset-pill" data-tpreset="one_handed" data-i18n="tpreset_one_handed">يد واحدة</button>
             <button type="button" class="preset-pill" data-tpreset="arcade" data-i18n="tpreset_arcade">أركيد</button>
+            <button type="button" class="preset-pill" data-tpreset="dos" data-i18n="tpreset_dos">DOS</button>
             <button type="button" class="preset-pill" data-tpreset="racing" data-i18n="tpreset_racing">سباق</button>
             <button type="button" class="preset-pill" data-tpreset="platformer" data-i18n="tpreset_platformer">منصات</button>
-            <button type="button" class="preset-pill" data-tpreset="dos" data-i18n="tpreset_dos">DOS</button>
           </div>
         </div>
         <div class="setting-row">
@@ -3847,6 +4157,24 @@
         device_gamepad: "🎮 يد التحكم",
         device_keyboard: "⌨️ كيبورد",
         device_mouse: "🖱️ ماوس",
+        settings_display_title: "العرض",
+        settings_audio_title: "الصوت",
+        settings_sources_title: "المصادر",
+        setting_stick_sub: "عصا ثابتة، عائمة، أو أسهم متقاطعة",
+        setting_vpad_presets: "قوالب تخطيط اللمس",
+        setting_vpad_presets_sub: "اختر تخطيطاً جاهزاً للوضع الحالي أو خصّص بالسحب",
+        setting_vpad_opacity_land: "شفافية الأزرار (أفقي)",
+        setting_scale_sub: "يحافظ على نسبة اللعبة الأصلية دون تمطيط",
+        setting_crt: "تأثير Scanlines / CRT",
+        setting_crt_sub: "خطوط شاشة كلاسيكية اختيارية (مغلق افتراضياً)",
+        setting_mute_default: "كتم الصوت عند بدء اللعبة",
+        go_sites_btn: "تصفح مواقع الألعاب",
+        tpreset_one_handed: "يد واحدة",
+        vpad_global_scale: "الحجم العام",
+        vpad_global_opacity: "الشفافية",
+        vpad_reset_layout: "إعادة التخطيط الافتراضي",
+        vpad_editor_overlap_err: "يوجد تداخل أو خروج عن الحواف (بالأحمر) — أصلحه قبل الحفظ",
+        vpad_reset_done: "تمت استعادة التخطيط الافتراضي للوضع الحالي",
         help_html: `
           <ul style="padding-inline-start:18px; margin:0;">
             <li><b>تشغيل الألعاب:</b> اضغط "افتح لعبة" واختر ملف <code>.swf</code> أو <code>.exe</code>. عند فتح <code>.exe</code> يستخرج التطبيق الـ SWF ويشغّله تلقائياً.</li>
@@ -4137,6 +4465,24 @@
         device_gamepad: "🎮 Gamepad",
         device_keyboard: "⌨️ Keyboard",
         device_mouse: "🖱️ Mouse",
+        settings_display_title: "Display",
+        settings_audio_title: "Audio",
+        settings_sources_title: "Sources",
+        setting_stick_sub: "Fixed stick, floating stick, or D-Pad cross",
+        setting_vpad_presets: "Touch Layout Presets",
+        setting_vpad_presets_sub: "Pick a ready layout for the active orientation or drag to customize",
+        setting_vpad_opacity_land: "Buttons Opacity (Landscape)",
+        setting_scale_sub: "Preserves original aspect ratio without stretching",
+        setting_crt: "Scanlines / CRT Effect",
+        setting_crt_sub: "Optional retro scanlines (OFF by default)",
+        setting_mute_default: "Mute Audio on Game Start",
+        go_sites_btn: "Browse Game Sites",
+        tpreset_one_handed: "One-Handed",
+        vpad_global_scale: "Global Scale",
+        vpad_global_opacity: "Opacity",
+        vpad_reset_layout: "Reset Default Layout",
+        vpad_editor_overlap_err: "Overlap or out-of-bounds detected (in red) — fix before saving",
+        vpad_reset_done: "Default layout restored for current orientation",
         help_html: `
           <ul style="padding-inline-start:18px; margin:0;">
             <li><b>Play Games:</b> Tap "Open Game" and select <code>.swf</code> or <code>.exe</code> files. Projector EXEs extract automatically.</li>
@@ -4226,72 +4572,178 @@
       wheel_down: "wheel_down"
     };
 
-    const DEFAULT_TOUCH_LAYOUT = {
-      move: { x: 14, y: 72, scale: 1, visible: true },
-      y: { x: 86, y: 58, scale: 1, visible: true },
-      x: { x: 77, y: 69, scale: 1, visible: true },
-      b: { x: 93, y: 69, scale: 1, visible: true },
-      a: { x: 86, y: 80, scale: 1, visible: true },
-      l1: { x: 10, y: 44, scale: 1, visible: true },
-      l2: { x: 10, y: 32, scale: 0.9, visible: true },
-      r1: { x: 90, y: 44, scale: 1, visible: true },
-      r2: { x: 90, y: 32, scale: 0.9, visible: true },
-      l3: { x: 27, y: 82, scale: 0.95, visible: false },
-      r3: { x: 68, y: 82, scale: 0.95, visible: false },
-      select: { x: 40, y: 17, scale: 1, visible: true },
-      menu: { x: 50, y: 17, scale: 1, visible: true },
-      start: { x: 60, y: 17, scale: 1, visible: true }
+    function getActiveOrientation() {
+      return window.innerWidth > window.innerHeight ? "landscape" : "portrait";
+    }
+
+    const DEFAULT_TOUCH_LAYOUT_PORTRAIT = {
+      l2: { x: 13, y: 12, scale: 1, visible: true },
+      l1: { x: 32.5, y: 12, scale: 1, visible: true },
+      r1: { x: 67.5, y: 12, scale: 1, visible: true },
+      r2: { x: 87, y: 12, scale: 1, visible: true },
+      select: { x: 29, y: 31, scale: 1, visible: true },
+      menu: { x: 50, y: 31, scale: 1, visible: true },
+      start: { x: 71, y: 31, scale: 1, visible: true },
+      move: { x: 23, y: 66, scale: 1, visible: true },
+      y: { x: 76, y: 51, scale: 1, visible: true },
+      x: { x: 64.5, y: 67, scale: 1, visible: true },
+      b: { x: 87.5, y: 67, scale: 1, visible: true },
+      a: { x: 76, y: 83, scale: 1, visible: true },
+      l3: { x: 46, y: 86, scale: 0.9, visible: false },
+      r3: { x: 54, y: 86, scale: 0.9, visible: false }
     };
 
-    const TOUCH_PRESETS = {
-      default: JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT)),
+    const DEFAULT_TOUCH_LAYOUT_LANDSCAPE = {
+      l2: { x: 16, y: 14, scale: 1, visible: true },
+      l1: { x: 27, y: 14, scale: 1, visible: true },
+      r1: { x: 73, y: 14, scale: 1, visible: true },
+      r2: { x: 84, y: 14, scale: 1, visible: true },
+      move: { x: 14, y: 74, scale: 1, visible: true },
+      y: { x: 84, y: 49, scale: 1, visible: true },
+      x: { x: 77, y: 67, scale: 1, visible: true },
+      b: { x: 91, y: 67, scale: 1, visible: true },
+      a: { x: 84, y: 84, scale: 1, visible: true },
+      select: { x: 39, y: 89, scale: 1, visible: true },
+      menu: { x: 50, y: 89, scale: 1, visible: true },
+      start: { x: 61, y: 89, scale: 1, visible: true },
+      l3: { x: 27, y: 86, scale: 0.9, visible: false },
+      r3: { x: 73, y: 86, scale: 0.9, visible: false }
+    };
+
+    const DEFAULT_TOUCH_LAYOUT = DEFAULT_TOUCH_LAYOUT_PORTRAIT;
+
+    const TOUCH_PRESETS_PORTRAIT = {
+      default: JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_PORTRAIT)),
+      one_handed: {
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_PORTRAIT)),
+        l2: { x: 13, y: 12, scale: 0.9, visible: false },
+        l1: { x: 22, y: 12, scale: 0.92, visible: true },
+        r1: { x: 78, y: 12, scale: 0.92, visible: true },
+        r2: { x: 87, y: 12, scale: 0.9, visible: false },
+        select: { x: 29, y: 30, scale: 0.95, visible: true },
+        menu: { x: 50, y: 30, scale: 0.95, visible: true },
+        start: { x: 71, y: 30, scale: 0.95, visible: true },
+        move: { x: 34, y: 67, scale: 0.9, visible: true },
+        y: { x: 68, y: 53, scale: 0.95, visible: true },
+        x: { x: 85, y: 53, scale: 0.95, visible: true },
+        b: { x: 68, y: 78, scale: 0.95, visible: true },
+        a: { x: 85, y: 78, scale: 0.95, visible: true }
+      },
       arcade: {
-        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT)),
-        move: { x: 15, y: 70, scale: 1.05, visible: true },
-        y: { x: 76, y: 62, scale: 1.05, visible: true },
-        x: { x: 86, y: 62, scale: 1.05, visible: true },
-        l1: { x: 94, y: 62, scale: 1.0, visible: true },
-        a: { x: 76, y: 78, scale: 1.05, visible: true },
-        b: { x: 86, y: 78, scale: 1.05, visible: true },
-        r1: { x: 94, y: 78, scale: 1.0, visible: true },
-        l2: { x: 10, y: 34, scale: 0.85, visible: false },
-        r2: { x: 90, y: 34, scale: 0.85, visible: false }
-      },
-      racing: {
-        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT)),
-        move: { x: 16, y: 72, scale: 1.1, visible: true },
-        a: { x: 89, y: 76, scale: 1.15, visible: true },
-        b: { x: 76, y: 79, scale: 1.05, visible: true },
-        x: { x: 88, y: 58, scale: 0.95, visible: true },
-        y: { x: 76, y: 62, scale: 0.9, visible: false },
-        l1: { x: 10, y: 44, scale: 0.95, visible: true },
-        r1: { x: 90, y: 44, scale: 0.95, visible: true },
-        l2: { x: 10, y: 32, scale: 0.85, visible: false },
-        r2: { x: 90, y: 32, scale: 0.85, visible: false }
-      },
-      platformer: {
-        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT)),
-        move: { x: 15, y: 74, scale: 1.05, visible: true },
-        a: { x: 88, y: 78, scale: 1.12, visible: true },
-        b: { x: 76, y: 74, scale: 1.05, visible: true },
-        x: { x: 88, y: 60, scale: 0.95, visible: true },
-        y: { x: 76, y: 58, scale: 0.9, visible: false },
-        l2: { x: 10, y: 34, scale: 0.85, visible: false },
-        r2: { x: 90, y: 34, scale: 0.85, visible: false }
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_PORTRAIT)),
+        l2: { x: 13, y: 12, scale: 0.9, visible: false },
+        r2: { x: 87, y: 12, scale: 0.9, visible: false },
+        select: { x: 29, y: 20, scale: 1, visible: true },
+        menu: { x: 50, y: 20, scale: 1, visible: true },
+        start: { x: 71, y: 20, scale: 1, visible: true },
+        move: { x: 21, y: 66, scale: 1, visible: true },
+        y: { x: 50, y: 52, scale: 1, visible: true },
+        x: { x: 67.5, y: 52, scale: 1, visible: true },
+        l1: { x: 86.5, y: 52, scale: 1, visible: true },
+        b: { x: 50, y: 78, scale: 1, visible: true },
+        a: { x: 67.5, y: 78, scale: 1, visible: true },
+        r1: { x: 86.5, y: 78, scale: 1, visible: true }
       },
       dos: {
-        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT)),
-        move: { x: 14, y: 75, scale: 0.95, visible: true },
-        a: { x: 89, y: 78, scale: 1.0, visible: true },
-        b: { x: 79, y: 78, scale: 0.95, visible: true },
-        x: { x: 89, y: 64, scale: 0.9, visible: false },
-        y: { x: 79, y: 64, scale: 0.9, visible: false },
-        l1: { x: 10, y: 45, scale: 0.85, visible: false },
-        l2: { x: 10, y: 34, scale: 0.85, visible: false },
-        r1: { x: 90, y: 45, scale: 0.85, visible: false },
-        r2: { x: 90, y: 34, scale: 0.85, visible: false }
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_PORTRAIT)),
+        l2: { x: 13, y: 12, scale: 0.9, visible: false },
+        r2: { x: 87, y: 12, scale: 0.9, visible: false },
+        l1: { x: 18, y: 12, scale: 0.95, visible: true },
+        r1: { x: 82, y: 12, scale: 0.95, visible: true },
+        y: { x: 76, y: 51, scale: 0.95, visible: false },
+        x: { x: 64.5, y: 67, scale: 0.95, visible: false },
+        b: { x: 67, y: 74, scale: 1, visible: true },
+        a: { x: 85, y: 74, scale: 1, visible: true }
+      },
+      racing: {
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_PORTRAIT)),
+        l2: { x: 13, y: 12, scale: 0.9, visible: false },
+        r2: { x: 87, y: 12, scale: 0.9, visible: false },
+        y: { x: 76, y: 51, scale: 0.95, visible: false },
+        x: { x: 84, y: 54, scale: 0.95, visible: true },
+        b: { x: 65, y: 77, scale: 1.0, visible: true },
+        a: { x: 84, y: 77, scale: 1.08, visible: true }
+      },
+      platformer: {
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_PORTRAIT)),
+        l2: { x: 13, y: 12, scale: 0.9, visible: false },
+        r2: { x: 87, y: 12, scale: 0.9, visible: false },
+        y: { x: 76, y: 51, scale: 0.95, visible: false },
+        x: { x: 84, y: 54, scale: 0.95, visible: true },
+        b: { x: 65, y: 74, scale: 1.0, visible: true },
+        a: { x: 84, y: 78, scale: 1.08, visible: true }
       }
     };
+
+    const TOUCH_PRESETS_LANDSCAPE = {
+      default: JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_LANDSCAPE)),
+      one_handed: {
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_LANDSCAPE)),
+        l2: { x: 16, y: 14, scale: 0.9, visible: false },
+        r2: { x: 84, y: 14, scale: 0.9, visible: false },
+        l1: { x: 73, y: 14, scale: 0.95, visible: true },
+        r1: { x: 86, y: 14, scale: 0.95, visible: true },
+        move: { x: 54, y: 73, scale: 0.9, visible: true },
+        y: { x: 74, y: 51, scale: 0.95, visible: true },
+        x: { x: 88, y: 51, scale: 0.95, visible: true },
+        b: { x: 74, y: 78, scale: 0.95, visible: true },
+        a: { x: 88, y: 78, scale: 0.95, visible: true },
+        select: { x: 12, y: 89, scale: 0.95, visible: true },
+        menu: { x: 24, y: 89, scale: 0.95, visible: true },
+        start: { x: 36, y: 89, scale: 0.95, visible: true }
+      },
+      arcade: {
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_LANDSCAPE)),
+        l2: { x: 16, y: 14, scale: 0.9, visible: false },
+        r2: { x: 84, y: 14, scale: 0.9, visible: false },
+        y: { x: 69, y: 52, scale: 1, visible: true },
+        x: { x: 79.5, y: 52, scale: 1, visible: true },
+        l1: { x: 90.5, y: 52, scale: 1, visible: true },
+        b: { x: 69, y: 76, scale: 1, visible: true },
+        a: { x: 79.5, y: 76, scale: 1, visible: true },
+        r1: { x: 90.5, y: 76, scale: 1, visible: true }
+      },
+      dos: {
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_LANDSCAPE)),
+        l2: { x: 16, y: 14, scale: 0.9, visible: false },
+        r2: { x: 84, y: 14, scale: 0.9, visible: false },
+        y: { x: 84, y: 49, scale: 0.95, visible: false },
+        x: { x: 77, y: 67, scale: 0.95, visible: false },
+        b: { x: 76, y: 76, scale: 1, visible: true },
+        a: { x: 88, y: 76, scale: 1, visible: true }
+      },
+      racing: {
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_LANDSCAPE)),
+        l2: { x: 16, y: 14, scale: 0.9, visible: false },
+        r2: { x: 84, y: 14, scale: 0.9, visible: false },
+        y: { x: 84, y: 49, scale: 0.95, visible: false },
+        x: { x: 88, y: 54, scale: 0.95, visible: true },
+        b: { x: 75, y: 78, scale: 1, visible: true },
+        a: { x: 88, y: 77, scale: 1.08, visible: true }
+      },
+      platformer: {
+        ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT_LANDSCAPE)),
+        l2: { x: 16, y: 14, scale: 0.9, visible: false },
+        r2: { x: 84, y: 14, scale: 0.9, visible: false },
+        y: { x: 84, y: 49, scale: 0.95, visible: false },
+        x: { x: 88, y: 54, scale: 0.95, visible: true },
+        b: { x: 75, y: 74, scale: 1, visible: true },
+        a: { x: 88, y: 77, scale: 1.08, visible: true }
+      }
+    };
+
+    const TOUCH_PRESETS = TOUCH_PRESETS_PORTRAIT;
+
+    function getDefaultTouchLayout(orient = getActiveOrientation()) {
+      const src = orient === "landscape" ? DEFAULT_TOUCH_LAYOUT_LANDSCAPE : DEFAULT_TOUCH_LAYOUT_PORTRAIT;
+      return JSON.parse(JSON.stringify(src));
+    }
+
+    function getTouchPreset(name, orient = getActiveOrientation()) {
+      const map = orient === "landscape" ? TOUCH_PRESETS_LANDSCAPE : TOUCH_PRESETS_PORTRAIT;
+      const src = map[name] || map.default;
+      return JSON.parse(JSON.stringify(src));
+    }
 
     const KEYMAP_PRESETS = {
       arrows: { ...DEFAULT_KEYMAP },
@@ -4351,11 +4803,15 @@
         quality: "high",
         scaleMode: "fit",
         renderer: "auto",
+        crtEffect: false,
         volume: 85,
+        muteDefault: false,
         vpadMode: "auto",
         vpadStickType: "joystick",
         vpadScale: 100,
-        vpadOpacity: 80,
+        vpadOpacity: 85,
+        vpadOpacityLandscape: 55,
+        activeTouchPreset: "default",
         keyMap: { ...DEFAULT_KEYMAP }
       },
       load() {
@@ -4384,14 +4840,23 @@
         html.dir = this.data.lang === "ar" ? "rtl" : "ltr";
         html.dataset.theme = this.data.theme;
         html.dataset.accent = this.data.accent;
+        const wrap = document.getElementById("player-stage-wrap");
+        if (wrap) {
+          wrap.classList.toggle("crt-enabled", Boolean(this.data.crtEffect));
+        }
         const vp = document.getElementById("virtual-pad");
         if (vp) {
-          vp.style.opacity = String(this.data.vpadOpacity / 100);
+          const op = getActiveOrientation() === "landscape"
+            ? (this.data.vpadOpacityLandscape ?? 55)
+            : (this.data.vpadOpacity ?? 85);
+          vp.style.setProperty("--pad-opacity", String(op / 100));
+          vp.style.opacity = String(op / 100);
           vp.style.setProperty("--vpad-scale", String((this.data.vpadScale || 100) / 100));
           vp.setAttribute("data-stick", this.data.vpadStickType || "joystick");
         }
-        if (typeof VirtualPad !== "undefined" && VirtualPad.refreshButtonLabels) {
-          VirtualPad.refreshButtonLabels();
+        if (typeof VirtualPad !== "undefined") {
+          if (VirtualPad.refreshButtonLabels) VirtualPad.refreshButtonLabels();
+          if (VirtualPad.updateContainerMetrics) VirtualPad.updateContainerMetrics();
         }
       }
     };
@@ -5704,13 +6169,20 @@
         this.currentGame = gameRecord;
         this.paused = false;
         this.rotated = false;
+        this.muted = Boolean(Settings.data.muteDefault);
         this.unlockAudio();
         this.hideErrorPanel();
-        document.getElementById("ruffle-mount").classList.remove("rotated-90", "scale-original");
+        const mountEl = document.getElementById("ruffle-mount");
+        mountEl.classList.remove("rotated-90", "scale-original", "scale-fill");
+        const muteBtn = document.getElementById("btn-player-mute");
+        if (muteBtn) muteBtn.classList.toggle("active", this.muted);
         document.getElementById("gp-disconnect-banner").classList.remove("visible");
         document.getElementById("lock-quick-menu").classList.remove("open");
         document.getElementById("player-title").textContent = gameRecord.name;
         const info = gameRecord.swfInfo;
+        mountEl.style.setProperty("--swf-orig-w", ((info && info.width) ? info.width : 550) + "px");
+        mountEl.style.setProperty("--swf-orig-h", ((info && info.height) ? info.height : 400) + "px");
+        document.getElementById("player-stage-wrap").classList.toggle("crt-enabled", Boolean(Settings.data.crtEffect));
         document.getElementById("player-subtitle").textContent = info
           ? `${info.signature} v${info.version} • ${info.width}×${info.height} • ${info.fps} FPS`
           : "SWF";
@@ -5786,6 +6258,7 @@
 
         // Virtual Pad, Touch-Mouse, Virtual Keyboard & Lock Mode setup
         VirtualPad.syncVisibility();
+        requestAnimationFrame(() => VirtualPad.updateContainerMetrics());
         TouchMouseSurface.syncCursorAndLock();
         VirtualKeyboard.syncFloatingBtn();
         await LockMode.onGameStart(gameRecord.id);
@@ -5971,6 +6444,10 @@
       applyScaleMode(mode) {
         const mount = document.getElementById("ruffle-mount");
         mount.classList.toggle("scale-original", mode === "original");
+        mount.classList.toggle("scale-fill", mode === "fill");
+        const info = this.currentGame && this.currentGame.swfInfo;
+        mount.style.setProperty("--swf-orig-w", ((info && info.width) ? info.width : 550) + "px");
+        mount.style.setProperty("--swf-orig-h", ((info && info.height) ? info.height : 400) + "px");
         if (this.player) {
           try {
             this.player.config = {
@@ -7260,10 +7737,225 @@
       }
     };
 
+    const LayoutValidator = {
+      WIDGET_IDS: ["l2", "l1", "r1", "r2", "select", "menu", "start", "move", "y", "x", "b", "a", "l3", "r3"],
+
+      clamp(v, lo, hi) {
+        return Math.max(lo, Math.min(hi, v));
+      },
+
+      isRoundWidget(id) {
+        return id === "move" || id === "a" || id === "b" || id === "x" || id === "y";
+      },
+
+      getWidgetPixelSize(id, padW, padH, orient, wScale = 1, globalScale = 1) {
+        let bw = 54, bh = 54;
+        if (id === "move") {
+          bw = orient === "landscape"
+            ? this.clamp(padH * 0.34, 104, 160)
+            : Math.max(112, Math.min(padW * 0.34, padH * 0.48));
+          bh = bw;
+        } else if (id === "a" || id === "b" || id === "x" || id === "y") {
+          bw = orient === "landscape"
+            ? this.clamp(padH * 0.14, 48, 72)
+            : this.clamp(padW * 0.15, 48, 84);
+          bh = bw;
+        } else if (id === "l1" || id === "l2" || id === "r1" || id === "r2") {
+          bw = orient === "landscape"
+            ? this.clamp(padW * 0.088, 48, 78)
+            : this.clamp(padW * 0.17, 48, 84);
+          bh = orient === "landscape"
+            ? this.clamp(padH * 0.13, 48, 56)
+            : this.clamp(padW * 0.08, 48, 84);
+        } else {
+          bw = orient === "landscape"
+            ? this.clamp(padW * 0.09, 54, 86)
+            : this.clamp(padW * 0.18, 48, 110);
+          bh = orient === "landscape"
+            ? this.clamp(padH * 0.10, 38, 48)
+            : this.clamp(padW * 0.09, 48, 56);
+        }
+        const f = this.clamp(wScale || 1, 0.7, 1.5) * this.clamp(globalScale || 1, 0.75, 1.35);
+        return { w: bw * f, h: bh * f };
+      },
+
+      getWidgetBox(id, item, padW, padH, orient, globalScale = 1) {
+        const { w, h } = this.getWidgetPixelSize(id, padW, padH, orient, item.scale || 1, globalScale);
+        const cx = ((Number(item.x) || 50) / 100) * padW;
+        const cy = ((Number(item.y) || 50) / 100) * padH;
+        const round = this.isRoundWidget(id);
+        return {
+          id,
+          cx,
+          cy,
+          w,
+          h,
+          r: w / 2,
+          round,
+          left: cx - w / 2,
+          right: cx + w / 2,
+          top: cy - h / 2,
+          bottom: cy + h / 2
+        };
+      },
+
+      boxesOverlap(a, b, minGapPx = 2) {
+        if (a.round && b.round) {
+          const dist = Math.hypot(a.cx - b.cx, a.cy - b.cy);
+          return dist < (a.r + b.r + minGapPx - 0.5);
+        }
+        if (a.round || b.round) {
+          const c = a.round ? a : b;
+          const r = a.round ? b : a;
+          const nx = Math.max(r.left, Math.min(c.cx, r.right));
+          const ny = Math.max(r.top, Math.min(c.cy, r.bottom));
+          const dist = Math.hypot(c.cx - nx, c.cy - ny);
+          return dist < (c.r + minGapPx - 0.5);
+        }
+        return !(
+          a.right + minGapPx <= b.left + 0.5 ||
+          b.right + minGapPx <= a.left + 0.5 ||
+          a.bottom + minGapPx <= b.top + 0.5 ||
+          b.bottom + minGapPx <= a.top + 0.5
+        );
+      },
+
+      inspect(layout, padW, padH, orient, globalScale = 1, touchVisibleMap = {}) {
+        const outOfBounds = new Set();
+        const overlapping = new Set();
+        const boxes = [];
+        const marginX = Math.max(8, padW * 0.036);
+        const marginY = Math.max(5, padH * 0.02);
+        const minGapPx = Math.max(2, padW * 0.004);
+
+        for (const id of this.WIDGET_IDS) {
+          const item = layout[id];
+          if (!item || item.visible === false || touchVisibleMap[id] === false) continue;
+          const box = this.getWidgetBox(id, item, padW, padH, orient, globalScale);
+          boxes.push(box);
+          if (
+            box.left < marginX - 1 ||
+            box.right > padW - marginX + 1 ||
+            box.top < marginY - 1 ||
+            box.bottom > padH - marginY + 1
+          ) {
+            outOfBounds.add(id);
+          }
+        }
+
+        for (let i = 0; i < boxes.length; i++) {
+          for (let j = i + 1; j < boxes.length; j++) {
+            if (this.boxesOverlap(boxes[i], boxes[j], minGapPx)) {
+              overlapping.add(boxes[i].id);
+              overlapping.add(boxes[j].id);
+            }
+          }
+        }
+
+        return {
+          valid: outOfBounds.size === 0 && overlapping.size === 0,
+          outOfBounds,
+          overlapping,
+          boxes
+        };
+      },
+
+      validateAndResolve(layout, padW, padH, orient, globalScale = 1, touchVisibleMap = {}) {
+        const out = JSON.parse(JSON.stringify(layout || getDefaultTouchLayout(orient)));
+        if (!padW || !padH || padW < 100 || padH < 100) {
+          return { layout: out, adjusted: false, remainingInvalid: false };
+        }
+        const marginX = Math.max(8, padW * 0.036);
+        const marginY = Math.max(5, padH * 0.02);
+        const minGapPx = Math.max(2, padW * 0.004);
+        let adjusted = false;
+
+        const clampBoxCenter = (id, cx, cy) => {
+          const { w, h } = this.getWidgetPixelSize(id, padW, padH, orient, out[id].scale || 1, globalScale);
+          const minX = Math.min(padW / 2, marginX + w / 2);
+          const maxX = Math.max(padW / 2, padW - marginX - w / 2);
+          const minY = Math.min(padH / 2, marginY + h / 2);
+          const maxY = Math.max(padH / 2, padH - marginY - h / 2);
+          return {
+            cx: this.clamp(cx, minX, maxX),
+            cy: this.clamp(cy, minY, maxY),
+            w,
+            h
+          };
+        };
+
+        const visibleIds = this.WIDGET_IDS.filter((id) => out[id] && out[id].visible !== false && touchVisibleMap[id] !== false);
+        for (const id of visibleIds) {
+          const rawCx = (out[id].x / 100) * padW;
+          const rawCy = (out[id].y / 100) * padH;
+          const clamped = clampBoxCenter(id, rawCx, rawCy);
+          if (Math.hypot(clamped.cx - rawCx, clamped.cy - rawCy) > 1.2) {
+            adjusted = true;
+            out[id].x = Number(((clamped.cx / padW) * 100).toFixed(1));
+            out[id].y = Number(((clamped.cy / padH) * 100).toFixed(1));
+          }
+        }
+
+        const runRepulsion = (maxIter = 28) => {
+          for (let iter = 0; iter < maxIter; iter++) {
+            let movedAny = false;
+            for (let i = 0; i < visibleIds.length; i++) {
+              for (let j = i + 1; j < visibleIds.length; j++) {
+                const idA = visibleIds[i], idB = visibleIds[j];
+                const boxA = this.getWidgetBox(idA, out[idA], padW, padH, orient, globalScale);
+                const boxB = this.getWidgetBox(idB, out[idB], padW, padH, orient, globalScale);
+                if (!this.boxesOverlap(boxA, boxB, minGapPx)) continue;
+
+                movedAny = true;
+                adjusted = true;
+                let dx = boxB.cx - boxA.cx;
+                let dy = boxB.cy - boxA.cy;
+                let dist = Math.hypot(dx, dy);
+                if (dist < 0.1) { dx = 1; dy = 0.5; dist = Math.hypot(dx, dy); }
+                const step = 4;
+                const ux = (dx / dist) * step;
+                const uy = (dy / dist) * step;
+
+                const cA = clampBoxCenter(idA, boxA.cx - ux * 0.45, boxA.cy - uy * 0.45);
+                const cB = clampBoxCenter(idB, boxB.cx + ux * 0.55, boxB.cy + uy * 0.55);
+                out[idA].x = Number(((cA.cx / padW) * 100).toFixed(1));
+                out[idA].y = Number(((cA.cy / padH) * 100).toFixed(1));
+                out[idB].x = Number(((cB.cx / padW) * 100).toFixed(1));
+                out[idB].y = Number(((cB.cy / padH) * 100).toFixed(1));
+              }
+            }
+            if (!movedAny) break;
+          }
+        };
+
+        runRepulsion(28);
+        let check = this.inspect(out, padW, padH, orient, globalScale, touchVisibleMap);
+        // Fallback auto-fit if oversized widgets cannot physically fit side-by-side
+        for (let shrinkPass = 0; shrinkPass < 6 && !check.valid; shrinkPass++) {
+          let shrunkAny = false;
+          for (const id of visibleIds) {
+            if (!check.overlapping.has(id) && !check.outOfBounds.has(id)) continue;
+            const curScale = Number(out[id].scale || 1);
+            if (curScale > 0.8) {
+              out[id].scale = Number(Math.max(0.8, curScale - 0.06).toFixed(2));
+              shrunkAny = true;
+              adjusted = true;
+            }
+          }
+          if (!shrunkAny) break;
+          runRepulsion(20);
+          check = this.inspect(out, padW, padH, orient, globalScale, touchVisibleMap);
+        }
+
+        return { layout: out, adjusted, remainingInvalid: !check.valid };
+      }
+    };
+
     const TouchEditor = {
       active: false,
       selectedId: "move",
       draftLayout: null,
+      lastReport: { valid: true, outOfBounds: new Set(), overlapping: new Set() },
 
       enter() {
         if (!RuffleEngine.player) {
@@ -7275,8 +7967,20 @@
         this.draftLayout = JSON.parse(JSON.stringify(VirtualPad.layout));
         const vp = document.getElementById("virtual-pad");
         vp.classList.add("active", "editing-layout");
+        const ov = document.getElementById("player-overlay");
+        if (ov) ov.classList.remove("vpad-hidden");
         document.getElementById("vpad-editor-bar").classList.add("visible");
+        const gs = document.getElementById("vpad-ed-global-scale");
+        if (gs) gs.value = Settings.data.vpadScale || 100;
+        const go = document.getElementById("vpad-ed-global-opacity");
+        if (go) {
+          go.value = getActiveOrientation() === "landscape"
+            ? (Settings.data.vpadOpacityLandscape ?? 55)
+            : (Settings.data.vpadOpacity ?? 85);
+        }
+        VirtualPad.updateContainerMetrics();
         this.selectWidget("move");
+        this.refreshValidation();
       },
 
       selectWidget(ctrlId) {
@@ -7291,27 +7995,74 @@
         }
       },
 
+      refreshValidation() {
+        const vp = document.getElementById("virtual-pad");
+        if (!vp || !this.draftLayout) return { valid: true };
+        const rect = vp.getBoundingClientRect();
+        const orient = getActiveOrientation();
+        const gScale = (Settings.data.vpadScale || 100) / 100;
+        const report = LayoutValidator.inspect(
+          this.draftLayout,
+          rect.width || window.innerWidth,
+          rect.height || window.innerHeight * 0.46,
+          orient,
+          gScale,
+          InputManager.config.touchVisible || {}
+        );
+        this.lastReport = report;
+        vp.querySelectorAll(".vpad-widget[data-ctrl-id]").forEach((el) => {
+          const id = el.dataset.ctrlId;
+          const bad = report.outOfBounds.has(id) || report.overlapping.has(id);
+          el.classList.toggle("invalid-ctrl", bad);
+        });
+        const warn = document.getElementById("vpad-editor-warning");
+        const doneBtn = document.getElementById("btn-vpad-ed-done");
+        if (warn) {
+          warn.textContent = t("vpad_editor_overlap_err");
+          warn.classList.toggle("visible", !report.valid);
+        }
+        if (doneBtn) {
+          doneBtn.classList.toggle("save-blocked", !report.valid);
+        }
+        return report;
+      },
+
       applyPreset(name) {
-        const p = TOUCH_PRESETS[name] || DEFAULT_TOUCH_LAYOUT;
+        const orient = getActiveOrientation();
+        const p = getTouchPreset(name, orient);
         this.draftLayout = JSON.parse(JSON.stringify(p));
+        Settings.data.activeTouchPreset = name;
+        Settings.save();
         VirtualPad.applyLayout(this.draftLayout);
         this.selectWidget(this.selectedId || "move");
+        this.refreshValidation();
+        UI.syncTouchPresetPills(name);
       },
 
       async exit(save = true) {
+        if (save && this.draftLayout) {
+          const report = this.refreshValidation();
+          if (!report.valid) {
+            UI.toast(t("vpad_editor_overlap_err"), "error");
+            return;
+          }
+        }
         this.active = false;
         const vp = document.getElementById("virtual-pad");
         vp.classList.remove("editing-layout");
-        vp.querySelectorAll(".selected-ctrl").forEach((w) => w.classList.remove("selected-ctrl"));
+        vp.querySelectorAll(".selected-ctrl, .invalid-ctrl").forEach((w) => w.classList.remove("selected-ctrl", "invalid-ctrl"));
         document.getElementById("vpad-editor-bar").classList.remove("visible");
+        const warn = document.getElementById("vpad-editor-warning");
+        if (warn) warn.classList.remove("visible");
 
         if (save && this.draftLayout) {
+          const orient = getActiveOrientation();
           VirtualPad.layout = JSON.parse(JSON.stringify(this.draftLayout));
           const scope = document.getElementById("vpad-ed-scope").value;
           if (scope === "game" && RuffleEngine.currentGame && RuffleEngine.currentGame.id) {
-            await FlashoraDB.setState("touch_layout_game_" + RuffleEngine.currentGame.id, VirtualPad.layout).catch(() => {});
+            await FlashoraDB.setState("touch_layout_game_" + RuffleEngine.currentGame.id + "_" + orient, VirtualPad.layout).catch(() => {});
           } else {
-            await FlashoraDB.setState("touch_layout_global", VirtualPad.layout).catch(() => {});
+            await FlashoraDB.setState("touch_layout_global_" + orient, VirtualPad.layout).catch(() => {});
           }
           UI.toast(t("save_done"), "success");
         }
@@ -7321,7 +8072,6 @@
 
       init() {
         const vp = document.getElementById("virtual-pad");
-        const wrap = document.getElementById("player-stage-wrap");
         let draggingId = null;
         let dragEl = null;
 
@@ -7340,15 +8090,19 @@
             if (!this.active || draggingId !== w.dataset.ctrlId || !dragEl) return;
             e.preventDefault();
             e.stopPropagation();
-            const rect = wrap.getBoundingClientRect();
-            const x = Math.max(5, Math.min(95, ((e.clientX - rect.left) / Math.max(1, rect.width)) * 100));
-            const y = Math.max(8, Math.min(92, ((e.clientY - rect.top) / Math.max(1, rect.height)) * 100));
-            dragEl.style.setProperty("--vx", x.toFixed(1) + "%");
-            dragEl.style.setProperty("--vy", y.toFixed(1) + "%");
+            const rect = vp.getBoundingClientRect();
+            const rawX = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 100;
+            const rawY = ((e.clientY - rect.top) / Math.max(1, rect.height)) * 100;
+            // Snap to 2% grid increments (matching visual 4% grid)
+            const x = LayoutValidator.clamp(Math.round(rawX / 2) * 2, 4, 96);
+            const y = LayoutValidator.clamp(Math.round(rawY / 2) * 2, 4, 96);
+            dragEl.style.setProperty("--vx", x + "%");
+            dragEl.style.setProperty("--vy", y + "%");
             if (this.draftLayout[draggingId]) {
-              this.draftLayout[draggingId].x = Number(x.toFixed(1));
-              this.draftLayout[draggingId].y = Number(y.toFixed(1));
+              this.draftLayout[draggingId].x = x;
+              this.draftLayout[draggingId].y = y;
             }
+            this.refreshValidation();
           }, true);
 
           const stopDrag = (e) => {
@@ -7356,6 +8110,7 @@
             e.stopPropagation();
             draggingId = null;
             dragEl = null;
+            this.refreshValidation();
           };
           w.addEventListener("pointerup", stopDrag, true);
           w.addEventListener("pointercancel", stopDrag, true);
@@ -7367,7 +8122,28 @@
           this.draftLayout[this.selectedId].scale = sc;
           const el = vp.querySelector(`.vpad-widget[data-ctrl-id="${this.selectedId}"]`);
           if (el) el.style.setProperty("--wscale", String(sc));
+          this.refreshValidation();
         });
+
+        const globalScaleEd = document.getElementById("vpad-ed-global-scale");
+        if (globalScaleEd) {
+          globalScaleEd.addEventListener("input", (e) => {
+            Settings.data.vpadScale = Number(e.target.value);
+            Settings.save();
+            UI.syncSettingsControls();
+            this.refreshValidation();
+          });
+        }
+        const globalOpacityEd = document.getElementById("vpad-ed-global-opacity");
+        if (globalOpacityEd) {
+          globalOpacityEd.addEventListener("input", (e) => {
+            const val = Number(e.target.value);
+            if (getActiveOrientation() === "landscape") Settings.data.vpadOpacityLandscape = val;
+            else Settings.data.vpadOpacity = val;
+            Settings.save();
+            UI.syncSettingsControls();
+          });
+        }
 
         document.getElementById("btn-vpad-ed-vis").addEventListener("click", () => {
           if (!this.active || !this.draftLayout[this.selectedId]) return;
@@ -7375,10 +8151,12 @@
           cur.visible = !cur.visible;
           const el = vp.querySelector(`.vpad-widget[data-ctrl-id="${this.selectedId}"]`);
           if (el) el.setAttribute("data-hidden", cur.visible ? "false" : "true");
+          this.refreshValidation();
         });
 
         document.getElementById("btn-vpad-ed-reset").addEventListener("click", () => {
           this.applyPreset("default");
+          UI.toast(t("vpad_reset_done"), "success");
         });
         document.getElementById("btn-vpad-ed-done").addEventListener("click", () => {
           this.exit(true);
@@ -7530,15 +8308,106 @@
     };
 
     const VirtualPad = {
-      layout: JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT)),
+      layout: getDefaultTouchLayout("portrait"),
+      currentOrient: getActiveOrientation(),
+      resizeObserver: null,
 
       async loadLayoutForGame(gameId) {
-        let loaded = gameId ? await FlashoraDB.getState("touch_layout_game_" + gameId).catch(() => null) : null;
-        if (!loaded) loaded = await FlashoraDB.getState("touch_layout_global").catch(() => null);
+        const orient = getActiveOrientation();
+        this.currentOrient = orient;
+        let loaded = gameId
+          ? await FlashoraDB.getState("touch_layout_game_" + gameId + "_" + orient).catch(() => null)
+          : null;
+        if (!loaded) {
+          loaded = await FlashoraDB.getState("touch_layout_global_" + orient).catch(() => null);
+        }
+        const fallback = getTouchPreset(Settings.data.activeTouchPreset || "default", orient);
         this.layout = loaded
-          ? { ...JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT)), ...loaded }
-          : JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT));
+          ? { ...fallback, ...loaded }
+          : fallback;
+        this.validateAndApply();
+      },
+
+      async applyPreset(name) {
+        const orient = getActiveOrientation();
+        const preset = getTouchPreset(name, orient);
+        Settings.data.activeTouchPreset = name;
+        Settings.save();
+        this.layout = preset;
+        await FlashoraDB.setState("touch_layout_global_" + orient, this.layout).catch(() => {});
+        this.validateAndApply();
+        UI.syncTouchPresetPills(name);
+      },
+
+      async resetDefaultLayout() {
+        const orient = getActiveOrientation();
+        Settings.data.activeTouchPreset = "default";
+        Settings.save();
+        const defLayout = getDefaultTouchLayout(orient);
+        this.layout = defLayout;
+        await FlashoraDB.setState("touch_layout_global_" + orient, defLayout).catch(() => {});
+        if (RuffleEngine.currentGame && RuffleEngine.currentGame.id) {
+          await FlashoraDB.setState("touch_layout_game_" + RuffleEngine.currentGame.id + "_" + orient, defLayout).catch(() => {});
+        }
+        this.validateAndApply();
+        UI.syncTouchPresetPills("default");
+        UI.toast(t("vpad_reset_done"), "success");
+      },
+
+      validateAndApply() {
+        const vp = document.getElementById("virtual-pad");
+        if (vp && typeof LayoutValidator !== "undefined") {
+          const rect = vp.getBoundingClientRect();
+          if (rect.width > 100 && rect.height > 100) {
+            const res = LayoutValidator.validateAndResolve(
+              this.layout,
+              rect.width,
+              rect.height,
+              getActiveOrientation(),
+              (Settings.data.vpadScale || 100) / 100,
+              (typeof InputManager !== "undefined" && InputManager.config.touchVisible) || {}
+            );
+            this.layout = res.layout;
+          }
+        }
         this.applyLayout(this.layout);
+      },
+
+      updateContainerMetrics() {
+        const vp = document.getElementById("virtual-pad");
+        if (!vp) return;
+        const orient = getActiveOrientation();
+        const op = orient === "landscape"
+          ? (Settings.data.vpadOpacityLandscape ?? 55)
+          : (Settings.data.vpadOpacity ?? 85);
+        vp.style.setProperty("--pad-opacity", String(op / 100));
+        vp.style.opacity = String(op / 100);
+        vp.style.setProperty("--vpad-scale", String((Settings.data.vpadScale || 100) / 100));
+
+        const rect = vp.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          vp.style.setProperty("--pad-w", rect.width + "px");
+          vp.style.setProperty("--pad-h", rect.height + "px");
+          if (!TouchEditor.active) {
+            this.validateAndApply();
+          } else {
+            TouchEditor.refreshValidation();
+          }
+        }
+      },
+
+      async handleViewportResize() {
+        const nextOrient = getActiveOrientation();
+        if (nextOrient !== this.currentOrient) {
+          this.currentOrient = nextOrient;
+          if (!TouchEditor.active) {
+            await this.loadLayoutForGame(RuffleEngine.currentGame ? RuffleEngine.currentGame.id : null);
+          } else {
+            TouchEditor.draftLayout = getTouchPreset(Settings.data.activeTouchPreset || "default", nextOrient);
+            this.applyLayout(TouchEditor.draftLayout);
+          }
+        }
+        this.updateContainerMetrics();
       },
 
       applyLayout(layoutObj) {
@@ -7557,7 +8426,7 @@
       },
 
       applyTouchVisibility() {
-        this.applyLayout(this.layout);
+        this.validateAndApply();
       },
 
       refreshButtonLabels() {
@@ -7592,30 +8461,41 @@
         }
 
         const vp = document.getElementById("virtual-pad");
+        const ov = document.getElementById("player-overlay");
         const stickMode = Settings.data.vpadStickType || "joystick";
         vp.classList.toggle("active", show);
+        if (ov) ov.classList.toggle("vpad-hidden", !show);
         vp.setAttribute("data-stick", stickMode === "floating" ? "joystick" : stickMode);
         const joyEl = document.getElementById("vpad-joystick");
         if (joyEl) joyEl.classList.toggle("floating-mode", stickMode === "floating");
+        const op = getActiveOrientation() === "landscape"
+          ? (Settings.data.vpadOpacityLandscape ?? 55)
+          : (Settings.data.vpadOpacity ?? 85);
         vp.style.setProperty("--vpad-scale", String((Settings.data.vpadScale || 100) / 100));
-        vp.style.opacity = String((Settings.data.vpadOpacity || 80) / 100);
+        vp.style.setProperty("--pad-opacity", String(op / 100));
+        vp.style.opacity = String(op / 100);
         document.getElementById("btn-player-vpad").classList.toggle("active", show);
         this.refreshButtonLabels();
-        this.applyLayout(this.layout);
+        this.updateContainerMetrics();
       },
 
       init() {
         this.refreshButtonLabels();
         this.applyLayout(this.layout);
 
+        const vp = document.getElementById("virtual-pad");
+        if (typeof ResizeObserver !== "undefined" && vp) {
+          this.resizeObserver = new ResizeObserver(() => this.updateContainerMetrics());
+          this.resizeObserver.observe(vp);
+        }
+        window.addEventListener("resize", () => this.handleViewportResize());
+        window.addEventListener("orientationchange", () => setTimeout(() => this.handleViewportResize(), 80));
+
         // Analog & Floating Joystick on move widget
         const moveWidget = document.getElementById("ctrl-widget-move");
         const joy = document.getElementById("vpad-joystick");
         const knob = document.getElementById("vpad-knob");
-        const vp = document.getElementById("virtual-pad");
-        const wrap = document.getElementById("player-stage-wrap");
         let joyTouchId = null;
-        let floatOriginX = 0, floatOriginY = 0;
 
         const updateStick = (clientX, clientY) => {
           const rect = joy.getBoundingClientRect();
@@ -7642,7 +8522,7 @@
           joyTouchId = null;
           knob.style.transform = "translate(0px, 0px)";
           if (Settings.data.vpadStickType === "floating" && !TouchEditor.active) {
-            const def = this.layout.move || DEFAULT_TOUCH_LAYOUT.move;
+            const def = this.layout.move || getDefaultTouchLayout().move;
             moveWidget.style.setProperty("--vx", def.x + "%");
             moveWidget.style.setProperty("--vy", def.y + "%");
           }
@@ -7659,9 +8539,9 @@
           joy.setPointerCapture(e.pointerId);
           joyTouchId = e.pointerId;
           if (Settings.data.vpadStickType === "floating") {
-            const wr = wrap.getBoundingClientRect();
-            const px = Math.max(8, Math.min(48, ((e.clientX - wr.left) / Math.max(1, wr.width)) * 100));
-            const py = Math.max(15, Math.min(88, ((e.clientY - wr.top) / Math.max(1, wr.height)) * 100));
+            const vr = vp.getBoundingClientRect();
+            const px = Math.max(8, Math.min(46, ((e.clientX - vr.left) / Math.max(1, vr.width)) * 100));
+            const py = Math.max(15, Math.min(90, ((e.clientY - vr.top) / Math.max(1, vr.height)) * 100));
             moveWidget.style.setProperty("--vx", px + "%");
             moveWidget.style.setProperty("--vy", py + "%");
           }
@@ -8037,12 +8917,14 @@
           InputManager.config.mouseOptions = InputManager.cloneDefaultConfig().mouseOptions;
           TouchMouseSurface.syncCursorAndLock();
         } else if (this.activeTab === "touch") {
-          Settings.data.vpadOpacity = 80;
+          Settings.data.vpadOpacity = 85;
+          Settings.data.vpadOpacityLandscape = 55;
           Settings.data.vpadScale = 100;
           Settings.data.vpadStickType = "joystick";
+          Settings.data.activeTouchPreset = "default";
           Settings.save();
           InputManager.config.touchVisible = {};
-          VirtualPad.layout = JSON.parse(JSON.stringify(DEFAULT_TOUCH_LAYOUT));
+          VirtualPad.layout = getDefaultTouchLayout(getActiveOrientation());
           VirtualPad.syncVisibility();
         }
         InputManager.saveGlobalConfig();
@@ -8237,11 +9119,7 @@
         });
         document.querySelectorAll("#ctrl-touch-presets .preset-pill").forEach((btn) => {
           btn.addEventListener("click", async () => {
-            const name = btn.dataset.tpreset;
-            const p = TOUCH_PRESETS[name] || DEFAULT_TOUCH_LAYOUT;
-            VirtualPad.layout = JSON.parse(JSON.stringify(p));
-            VirtualPad.applyLayout(VirtualPad.layout);
-            await FlashoraDB.setState("touch_layout_global", VirtualPad.layout).catch(() => {});
+            await VirtualPad.applyPreset(btn.dataset.tpreset);
             this.renderTouchVisList();
             UI.toast(btn.textContent, "success");
           });
@@ -9451,6 +10329,12 @@
         Converter.render();
       },
 
+      syncTouchPresetPills(activePreset = Settings.data.activeTouchPreset || "default") {
+        document.querySelectorAll("#settings-touch-presets .preset-pill, #ctrl-touch-presets .preset-pill, #vpad-ed-presets .preset-pill").forEach((b) => {
+          b.classList.toggle("active", b.dataset.tpreset === activePreset);
+        });
+      },
+
       syncSettingsControls() {
         document.getElementById("set-lang").value = Settings.data.lang;
         document.getElementById("set-theme").value = Settings.data.theme;
@@ -9458,14 +10342,40 @@
         document.getElementById("set-scale").value = Settings.data.scaleMode;
         const rendEl = document.getElementById("set-renderer");
         if (rendEl) rendEl.value = Settings.data.renderer || "auto";
+        const crtEl = document.getElementById("set-crt");
+        if (crtEl) crtEl.value = Settings.data.crtEffect ? "on" : "off";
         document.getElementById("set-volume").value = Settings.data.volume;
         document.getElementById("set-volume-val").textContent = Settings.data.volume + "%";
+        const muteDefEl = document.getElementById("set-mute-default");
+        if (muteDefEl) muteDefEl.value = Settings.data.muteDefault ? "on" : "off";
         document.getElementById("set-vpad").value = Settings.data.vpadMode;
-        document.getElementById("vpad-opacity-range").value = Settings.data.vpadOpacity;
+
+        const stickSetEl = document.getElementById("set-vpad-stick");
+        if (stickSetEl) stickSetEl.value = Settings.data.vpadStickType || "joystick";
         const stickSel = document.getElementById("vpad-stick-select");
         if (stickSel) stickSel.value = Settings.data.vpadStickType || "joystick";
+
+        const setScale = document.getElementById("set-vpad-scale");
+        if (setScale) setScale.value = Settings.data.vpadScale || 100;
+        const setScaleVal = document.getElementById("set-vpad-scale-val");
+        if (setScaleVal) setScaleVal.textContent = (Settings.data.vpadScale || 100) + "%";
         const scaleRng = document.getElementById("vpad-scale-range");
         if (scaleRng) scaleRng.value = Settings.data.vpadScale || 100;
+
+        const setOp = document.getElementById("set-vpad-opacity");
+        if (setOp) setOp.value = Settings.data.vpadOpacity ?? 85;
+        const setOpVal = document.getElementById("set-vpad-opacity-val");
+        if (setOpVal) setOpVal.textContent = (Settings.data.vpadOpacity ?? 85) + "%";
+        const opRng = document.getElementById("vpad-opacity-range");
+        if (opRng) opRng.value = Settings.data.vpadOpacity ?? 85;
+
+        const setOpLand = document.getElementById("set-vpad-opacity-land");
+        if (setOpLand) setOpLand.value = Settings.data.vpadOpacityLandscape ?? 55;
+        const setOpLandVal = document.getElementById("set-vpad-opacity-land-val");
+        if (setOpLandVal) setOpLandVal.textContent = (Settings.data.vpadOpacityLandscape ?? 55) + "%";
+
+        this.syncTouchPresetPills();
+
         document.querySelectorAll(".accent-dot").forEach((d) => {
           d.classList.toggle("active", d.dataset.accent === Settings.data.accent);
         });
@@ -10003,6 +10913,14 @@
           document.getElementById("set-volume-val").textContent = e.target.value + "%";
           Settings.save();
         });
+        document.getElementById("set-mute-default").addEventListener("change", (e) => {
+          Settings.data.muteDefault = e.target.value === "on";
+          Settings.save();
+        });
+        document.getElementById("set-crt").addEventListener("change", (e) => {
+          Settings.data.crtEffect = e.target.value === "on";
+          Settings.save();
+        });
         document.getElementById("set-vpad").addEventListener("change", (e) => {
           Settings.data.vpadMode = e.target.value; Settings.save(); VirtualPad.syncVisibility();
         });
@@ -10012,21 +10930,52 @@
             Settings.data.renderer = e.target.value; Settings.save();
           });
         }
-        document.getElementById("vpad-opacity-range").addEventListener("input", (e) => {
-          Settings.data.vpadOpacity = Number(e.target.value);
+
+        // Settings Screen Touch Pad Controls <-> Controls Modal Sync
+        const onVpadScaleInput = (val) => {
+          Settings.data.vpadScale = Number(val);
           Settings.save();
+          this.syncSettingsControls();
           VirtualPad.syncVisibility();
-        });
-        document.getElementById("vpad-scale-range").addEventListener("input", (e) => {
-          Settings.data.vpadScale = Number(e.target.value);
+        };
+        const onVpadOpacityInput = (val) => {
+          Settings.data.vpadOpacity = Number(val);
           Settings.save();
+          this.syncSettingsControls();
           VirtualPad.syncVisibility();
-        });
-        document.getElementById("vpad-stick-select").addEventListener("change", (e) => {
-          Settings.data.vpadStickType = e.target.value;
+        };
+        const onVpadOpacityLandInput = (val) => {
+          Settings.data.vpadOpacityLandscape = Number(val);
           Settings.save();
+          this.syncSettingsControls();
           VirtualPad.syncVisibility();
+        };
+        const onVpadStickChange = (val) => {
+          Settings.data.vpadStickType = val;
+          Settings.save();
+          this.syncSettingsControls();
+          VirtualPad.syncVisibility();
+        };
+
+        document.getElementById("vpad-opacity-range").addEventListener("input", (e) => onVpadOpacityInput(e.target.value));
+        document.getElementById("set-vpad-opacity").addEventListener("input", (e) => onVpadOpacityInput(e.target.value));
+        document.getElementById("set-vpad-opacity-land").addEventListener("input", (e) => onVpadOpacityLandInput(e.target.value));
+        document.getElementById("vpad-scale-range").addEventListener("input", (e) => onVpadScaleInput(e.target.value));
+        document.getElementById("set-vpad-scale").addEventListener("input", (e) => onVpadScaleInput(e.target.value));
+        document.getElementById("vpad-stick-select").addEventListener("change", (e) => onVpadStickChange(e.target.value));
+        document.getElementById("set-vpad-stick").addEventListener("change", (e) => onVpadStickChange(e.target.value));
+
+        document.querySelectorAll("#settings-touch-presets .preset-pill").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            await VirtualPad.applyPreset(btn.dataset.tpreset);
+            InputUI.renderTouchVisList();
+            this.toast(btn.textContent, "success");
+          });
         });
+        document.getElementById("btn-settings-touch-editor").addEventListener("click", () => TouchEditor.enter());
+        document.getElementById("btn-settings-reset-layout").addEventListener("click", () => VirtualPad.resetDefaultLayout());
+        document.getElementById("btn-settings-go-sites").addEventListener("click", () => this.switchTab("sites"));
+
         document.querySelectorAll("#keymap-presets-row .preset-pill").forEach((btn) => {
           btn.addEventListener("click", async () => {
             const p = KEYMAP_PRESETS[btn.dataset.preset];
@@ -10144,10 +11093,13 @@
         });
         document.getElementById("btn-player-vpad").addEventListener("click", () => {
           const vp = document.getElementById("virtual-pad");
+          const ov = document.getElementById("player-overlay");
           const next = !vp.classList.contains("active");
           if (!next) VirtualPad.releaseAll();
           vp.classList.toggle("active", next);
+          if (ov) ov.classList.toggle("vpad-hidden", !next);
           document.getElementById("btn-player-vpad").classList.toggle("active", next);
+          requestAnimationFrame(() => VirtualPad.updateContainerMetrics());
           UI.toast(next ? t("vpad_shown_msg") : t("vpad_hidden_msg"), "info");
         });
         document.getElementById("btn-player-mute").addEventListener("click", () => {
@@ -10170,10 +11122,13 @@
           }
         });
 
-        // Auto-hide HUD interaction listeners
+        // Auto-hide HUD interaction listeners (ignore clicks on virtual pad / lock button / editor bar)
         document.getElementById("hud-reveal-pill").addEventListener("click", () => RuffleEngine.showHudTemporarily());
         ["pointerdown", "mousemove"].forEach((ev) => {
-          document.getElementById("player-overlay").addEventListener(ev, () => RuffleEngine.showHudTemporarily(), { passive: true });
+          document.getElementById("player-overlay").addEventListener(ev, (e) => {
+            if (e.target && e.target.closest && e.target.closest("#virtual-pad, #btn-lock-mode, #vpad-editor-bar")) return;
+            RuffleEngine.showHudTemporarily();
+          }, { passive: true });
         });
       }
     };
