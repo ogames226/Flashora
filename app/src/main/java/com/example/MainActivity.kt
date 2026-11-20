@@ -7,16 +7,21 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.hardware.input.InputManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Base64
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.RenderProcessGoneDetail
@@ -140,6 +145,7 @@ class MainActivity : ComponentActivity() {
     private var isPageLoaded by mutableStateOf(false)
     private var isFullscreenMode by mutableStateOf(false)
     private var isPlayerActive by mutableStateOf(false)
+    private var isControlTesterActive by mutableStateOf(false)
     private var activeBrowserUrl by mutableStateOf<String?>(null)
     private var browserCurrentUrl by mutableStateOf("")
     private var browserPageLoading by mutableStateOf(false)
@@ -147,21 +153,31 @@ class MainActivity : ComponentActivity() {
     private var detectedFlashUrls by mutableStateOf<List<String>>(emptyList())
     private var capturedPageFlashUrls by mutableStateOf<List<String>>(emptyList())
 
+    private data class NativePadState(
+        val deviceId: Int,
+        val name: String,
+        val keys: MutableMap<String, Boolean> = mutableMapOf(),
+        var lx: Float = 0f,
+        var ly: Float = 0f,
+        var rx: Float = 0f,
+        var ry: Float = 0f,
+        var l2: Float = 0f,
+        var r2: Float = 0f,
+        var hatX: Float = 0f,
+        var hatY: Float = 0f,
+    )
+
     private var inputManager: InputManager? = null
-    private val nativeGamepadKeys = mutableMapOf<String, Boolean>()
-    private var nativeStickLeftX = 0f
-    private var nativeStickLeftY = 0f
-    private var nativeStickRightX = 0f
-    private var nativeStickRightY = 0f
-    private var nativeTriggerLeft = 0f
-    private var nativeTriggerRight = 0f
-    private var nativeHatX = 0f
-    private var nativeHatY = 0f
+    private val nativeGamepads = java.util.concurrent.ConcurrentHashMap<Int, NativePadState>()
     private var lastSentGamepadPayload = ""
 
     private val inputDeviceListener = object : InputManager.InputDeviceListener {
         override fun onInputDeviceAdded(deviceId: Int) = notifyJsConnectedGamepads()
-        override fun onInputDeviceRemoved(deviceId: Int) = notifyJsConnectedGamepads()
+        override fun onInputDeviceRemoved(deviceId: Int) {
+            nativeGamepads.remove(deviceId)
+            notifyJsConnectedGamepads()
+            pushNativeGamepadState(force = true)
+        }
         override fun onInputDeviceChanged(deviceId: Int) = notifyJsConnectedGamepads()
     }
 
@@ -362,6 +378,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (isFullscreenMode) {
+            updateSystemBars(true)
+        }
+    }
+
     override fun onDestroy() {
         inputManager?.unregisterInputDeviceListener(inputDeviceListener)
         filePathCallback?.onReceiveValue(null)
@@ -383,51 +406,67 @@ class MainActivity : ComponentActivity() {
         return hasGamepad || hasJoystick
     }
 
-    private fun listConnectedControllerNames(): List<String> {
-        val names = mutableListOf<String>()
+    private fun listConnectedControllers(): List<JSONObject> {
+        val list = mutableListOf<JSONObject>()
         for (id in InputDevice.getDeviceIds()) {
             val dev = InputDevice.getDevice(id)
             if (isGamepadDevice(dev) && dev != null && !dev.isVirtual) {
                 val label = dev.name?.trim().orEmpty().ifBlank { "Controller #$id" }
-                if (label !in names) names.add(label)
+                val hasRumble = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    try { dev.vibratorManager.vibratorIds.isNotEmpty() } catch (_: Exception) { false }
+                } else {
+                    false
+                }
+                list.add(
+                    JSONObject().apply {
+                        put("id", id)
+                        put("name", label)
+                        put("vendorId", dev.vendorId)
+                        put("productId", dev.productId)
+                        put("hasRumble", hasRumble)
+                    },
+                )
             }
         }
-        return names
+        return list.take(4)
     }
+
+    private fun listConnectedControllerNames(): List<String> =
+        listConnectedControllers().map { it.optString("name") }
 
     private fun notifyJsConnectedGamepads() {
         val wv = mainWebViewRef ?: return
         if (!isPageLoaded) return
-        val names = listConnectedControllerNames()
-        val arr = JSONArray(names).toString()
+        val devices = listConnectedControllers()
+        val namesArr = JSONArray(devices.map { it.optString("name") }).toString()
+        val devsArr = JSONArray(devices).toString()
         wv.post {
             wv.evaluateJavascript(
-                "window.onNativeGamepadConnection && window.onNativeGamepadConnection(${names.size}, $arr);",
+                "window.onNativeGamepadConnection && window.onNativeGamepadConnection(${devices.size}, $namesArr, $devsArr);",
                 null,
             )
         }
     }
 
     private fun resetNativeGamepadState() {
-        nativeGamepadKeys.clear()
-        nativeStickLeftX = 0f
-        nativeStickLeftY = 0f
-        nativeStickRightX = 0f
-        nativeStickRightY = 0f
-        nativeTriggerLeft = 0f
-        nativeTriggerRight = 0f
-        nativeHatX = 0f
-        nativeHatY = 0f
+        nativeGamepads.clear()
         lastSentGamepadPayload = ""
+    }
+
+    private fun getOrCreatePadState(deviceId: Int, device: InputDevice?): NativePadState {
+        return nativeGamepads.getOrPut(deviceId) {
+            val label = device?.name?.trim().orEmpty().ifBlank { "Controller #$deviceId" }
+            NativePadState(deviceId = deviceId, name = label)
+        }
     }
 
     private fun getCenteredAxis(event: MotionEvent, device: InputDevice?, axis: Int): Float {
         val value = event.getAxisValue(axis)
         val range = device?.getMotionRange(axis, event.source)
         if (range != null) {
-            val flat = maxOf(range.flat, 0.14f)
+            val flat = maxOf(range.flat, 0.08f)
             if (abs(value) <= flat) return 0f
-        } else if (abs(value) <= 0.14f) {
+        } else if (abs(value) <= 0.08f) {
             return 0f
         }
         return value.coerceIn(-1f, 1f)
@@ -442,8 +481,11 @@ class MainActivity : ComponentActivity() {
         KeyEvent.KEYCODE_BUTTON_R1 -> "r1"
         KeyEvent.KEYCODE_BUTTON_L2 -> "l2"
         KeyEvent.KEYCODE_BUTTON_R2 -> "r2"
+        KeyEvent.KEYCODE_BUTTON_THUMBL -> "l3"
+        KeyEvent.KEYCODE_BUTTON_THUMBR -> "r3"
         KeyEvent.KEYCODE_BUTTON_START -> "start"
-        KeyEvent.KEYCODE_BUTTON_SELECT, KeyEvent.KEYCODE_BUTTON_MODE -> "esc"
+        KeyEvent.KEYCODE_BUTTON_SELECT -> "select"
+        KeyEvent.KEYCODE_BUTTON_MODE -> "menu"
         KeyEvent.KEYCODE_DPAD_LEFT -> "dpad_left"
         KeyEvent.KEYCODE_DPAD_RIGHT -> "dpad_right"
         KeyEvent.KEYCODE_DPAD_UP -> "dpad_up"
@@ -452,62 +494,89 @@ class MainActivity : ComponentActivity() {
         else -> null
     }
 
-    private fun pushNativeGamepadState() {
-        val wv = mainWebViewRef ?: return
-        if (!isPageLoaded || !isPlayerActive) return
-        val left = (nativeGamepadKeys["dpad_left"] == true) || nativeHatX < -0.45f || nativeStickLeftX < -0.42f
-        val right = (nativeGamepadKeys["dpad_right"] == true) || nativeHatX > 0.45f || nativeStickLeftX > 0.42f
-        val up = (nativeGamepadKeys["dpad_up"] == true) || nativeHatY < -0.45f || nativeStickLeftY < -0.42f
-        val down = (nativeGamepadKeys["dpad_down"] == true) || nativeHatY > 0.45f || nativeStickLeftY > 0.42f
-        val l2 = (nativeGamepadKeys["l2"] == true) || nativeTriggerLeft > 0.42f
-        val r2 = (nativeGamepadKeys["r2"] == true) || nativeTriggerRight > 0.42f
-
-        val rx = (kotlin.math.round(nativeStickRightX * 100f) / 100f)
-        val ry = (kotlin.math.round(nativeStickRightY * 100f) / 100f)
-
-        val payload = JSONObject().apply {
+    private fun padStateToJson(pad: NativePadState): JSONObject {
+        fun r2(v: Float): Double = (kotlin.math.round(v * 1000f) / 1000f).toDouble()
+        val l2Val = maxOf(pad.l2, if (pad.keys["l2"] == true) 1f else 0f)
+        val r2Val = maxOf(pad.r2, if (pad.keys["r2"] == true) 1f else 0f)
+        return JSONObject().apply {
+            put("deviceId", pad.deviceId)
+            put("name", pad.name)
             put("connected", true)
-            put("left", left)
-            put("right", right)
-            put("up", up)
-            put("down", down)
-            put("a", nativeGamepadKeys["a"] == true)
-            put("b", nativeGamepadKeys["b"] == true)
-            put("x", nativeGamepadKeys["x"] == true)
-            put("y", nativeGamepadKeys["y"] == true)
-            put("l1", nativeGamepadKeys["l1"] == true)
-            put("r1", nativeGamepadKeys["r1"] == true)
-            put("l2", l2)
-            put("r2", r2)
-            put("start", nativeGamepadKeys["start"] == true)
-            put("esc", nativeGamepadKeys["esc"] == true)
-            put("rx", rx.toDouble())
-            put("ry", ry.toDouble())
-        }.toString()
-
-        if (payload == lastSentGamepadPayload) return
-        lastSentGamepadPayload = payload
-        wv.post {
-            wv.evaluateJavascript("window.onNativeGamepadState && window.onNativeGamepadState($payload);", null)
+            put("lx", r2(pad.lx))
+            put("ly", r2(pad.ly))
+            put("rx", r2(pad.rx))
+            put("ry", r2(pad.ry))
+            put("hatX", r2(pad.hatX))
+            put("hatY", r2(pad.hatY))
+            put("l2Val", r2(l2Val))
+            put("r2Val", r2(r2Val))
+            put("dpad_up", (pad.keys["dpad_up"] == true) || pad.hatY < -0.45f)
+            put("dpad_down", (pad.keys["dpad_down"] == true) || pad.hatY > 0.45f)
+            put("dpad_left", (pad.keys["dpad_left"] == true) || pad.hatX < -0.45f)
+            put("dpad_right", (pad.keys["dpad_right"] == true) || pad.hatX > 0.45f)
+            put("a", pad.keys["a"] == true)
+            put("b", pad.keys["b"] == true)
+            put("x", pad.keys["x"] == true)
+            put("y", pad.keys["y"] == true)
+            put("l1", pad.keys["l1"] == true)
+            put("r1", pad.keys["r1"] == true)
+            put("l2", l2Val > 0.25f)
+            put("r2", r2Val > 0.25f)
+            put("l3", pad.keys["l3"] == true)
+            put("r3", pad.keys["r3"] == true)
+            put("start", pad.keys["start"] == true)
+            put("select", pad.keys["select"] == true)
+            put("menu", pad.keys["menu"] == true)
+            put("esc", (pad.keys["select"] == true) || (pad.keys["menu"] == true))
+            put("left", (pad.keys["dpad_left"] == true) || pad.hatX < -0.45f || pad.lx < -0.42f)
+            put("right", (pad.keys["dpad_right"] == true) || pad.hatX > 0.45f || pad.lx > 0.42f)
+            put("up", (pad.keys["dpad_up"] == true) || pad.hatY < -0.45f || pad.ly < -0.42f)
+            put("down", (pad.keys["dpad_down"] == true) || pad.hatY > 0.45f || pad.ly > 0.42f)
         }
     }
 
+    private fun pushNativeGamepadState(force: Boolean = false) {
+        val wv = mainWebViewRef ?: return
+        if (!isPageLoaded || (!isPlayerActive && !isControlTesterActive)) return
+        val devicesArr = JSONArray()
+        for ((_, pad) in nativeGamepads.entries.sortedBy { it.key }.take(4)) {
+            devicesArr.put(padStateToJson(pad))
+        }
+        val firstObj = if (devicesArr.length() > 0) devicesArr.getJSONObject(0) else JSONObject().put("connected", false)
+        val payload = devicesArr.toString()
+        if (!force && payload == lastSentGamepadPayload) return
+        lastSentGamepadPayload = payload
+        val singleStr = firstObj.toString()
+        wv.post {
+            wv.evaluateJavascript(
+                "window.onNativeGamepadsState && window.onNativeGamepadsState($payload); window.onNativeGamepadState && window.onNativeGamepadState($singleStr);",
+                null,
+            )
+        }
+    }
+
+    private fun shouldCaptureControllerInput(): Boolean {
+        return isPageLoaded && (isPlayerActive || isControlTesterActive) && activeBrowserUrl == null
+    }
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (isPageLoaded && isPlayerActive && activeBrowserUrl == null) {
+        if (shouldCaptureControllerInput()) {
             val isFromController = isGamepadDevice(event.device) ||
                 event.isFromSource(InputDevice.SOURCE_DPAD) ||
                 KeyEvent.isGamepadButton(event.keyCode)
             if (isFromController) {
                 val slot = mapKeyCodeToSlot(event.keyCode)
                 if (slot != null) {
+                    val devId = event.deviceId
+                    val pad = getOrCreatePadState(devId, event.device)
                     if (event.action == KeyEvent.ACTION_DOWN) {
                         if (event.repeatCount == 0) {
-                            nativeGamepadKeys[slot] = true
+                            pad.keys[slot] = true
                             pushNativeGamepadState()
                         }
                         return true
                     } else if (event.action == KeyEvent.ACTION_UP) {
-                        nativeGamepadKeys[slot] = false
+                        pad.keys[slot] = false
                         pushNativeGamepadState()
                         return true
                     }
@@ -518,26 +587,27 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
-        if (isPageLoaded && isPlayerActive && activeBrowserUrl == null) {
+        if (shouldCaptureControllerInput()) {
             val isControllerMotion = event.isFromSource(InputDevice.SOURCE_JOYSTICK) ||
                 event.isFromSource(InputDevice.SOURCE_GAMEPAD) ||
                 event.isFromSource(InputDevice.SOURCE_DPAD)
             if (isControllerMotion && event.action == MotionEvent.ACTION_MOVE) {
                 val device = event.device
-                nativeStickLeftX = getCenteredAxis(event, device, MotionEvent.AXIS_X)
-                nativeStickLeftY = getCenteredAxis(event, device, MotionEvent.AXIS_Y)
-                nativeHatX = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_X)
-                nativeHatY = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_Y)
-                nativeStickRightX = getCenteredAxis(event, device, MotionEvent.AXIS_Z)
-                nativeStickRightY = getCenteredAxis(event, device, MotionEvent.AXIS_RZ)
-                nativeTriggerLeft = maxOf(
+                val pad = getOrCreatePadState(event.deviceId, device)
+                pad.lx = getCenteredAxis(event, device, MotionEvent.AXIS_X)
+                pad.ly = getCenteredAxis(event, device, MotionEvent.AXIS_Y)
+                pad.hatX = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_X)
+                pad.hatY = getCenteredAxis(event, device, MotionEvent.AXIS_HAT_Y)
+                pad.rx = getCenteredAxis(event, device, MotionEvent.AXIS_Z)
+                pad.ry = getCenteredAxis(event, device, MotionEvent.AXIS_RZ)
+                pad.l2 = maxOf(
                     event.getAxisValue(MotionEvent.AXIS_LTRIGGER),
                     event.getAxisValue(MotionEvent.AXIS_BRAKE),
-                )
-                nativeTriggerRight = maxOf(
+                ).coerceIn(0f, 1f)
+                pad.r2 = maxOf(
                     event.getAxisValue(MotionEvent.AXIS_RTRIGGER),
                     event.getAxisValue(MotionEvent.AXIS_GAS),
-                )
+                ).coerceIn(0f, 1f)
                 pushNativeGamepadState()
                 return true
             }
@@ -933,6 +1003,17 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
+        fun setKeepScreenOn(enabled: Boolean) {
+            runOnUiThread {
+                if (enabled) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+        }
+
+        @JavascriptInterface
         fun setPlayerActive(active: Boolean) {
             runOnUiThread {
                 isPlayerActive = active
@@ -941,7 +1022,20 @@ class MainActivity : ComponentActivity() {
                     mainWebViewRef?.isFocusableInTouchMode = true
                     mainWebViewRef?.requestFocus()
                     notifyJsConnectedGamepads()
-                } else {
+                } else if (!isControlTesterActive) {
+                    resetNativeGamepadState()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun setControlTesterActive(active: Boolean) {
+            runOnUiThread {
+                isControlTesterActive = active
+                if (active) {
+                    mainWebViewRef?.requestFocus()
+                    notifyJsConnectedGamepads()
+                } else if (!isPlayerActive) {
                     resetNativeGamepadState()
                 }
             }
@@ -959,6 +1053,54 @@ class MainActivity : ComponentActivity() {
         @JavascriptInterface
         fun getConnectedGamepadsJson(): String {
             return JSONArray(listConnectedControllerNames()).toString()
+        }
+
+        @JavascriptInterface
+        fun getConnectedControllersJson(): String {
+            return JSONArray(listConnectedControllers()).toString()
+        }
+
+        @JavascriptInterface
+        fun vibrate(durationMs: Int, amplitude: Int) {
+            val ms = durationMs.coerceIn(5, 800).toLong()
+            val amp = amplitude.coerceIn(1, 255)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                    val v = vm?.defaultVibrator
+                    if (v != null && v.hasVibrator()) {
+                        v.vibrate(VibrationEffect.createOneShot(ms, amp))
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    val v = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                    if (v != null && v.hasVibrator()) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            v.vibrate(VibrationEffect.createOneShot(ms, amp))
+                        } else {
+                            @Suppress("DEPRECATION")
+                            v.vibrate(ms)
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        @JavascriptInterface
+        fun vibrateGamepad(deviceId: Int, durationMs: Int, amplitude: Int): Boolean {
+            val ms = durationMs.coerceIn(10, 1500).toLong()
+            val amp = amplitude.coerceIn(1, 255)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                try {
+                    val dev = InputDevice.getDevice(deviceId)
+                    val vm = dev?.vibratorManager
+                    if (vm != null && vm.vibratorIds.isNotEmpty()) {
+                        vm.defaultVibrator.vibrate(VibrationEffect.createOneShot(ms, amp))
+                        return true
+                    }
+                } catch (_: Exception) {}
+            }
+            return false
         }
 
         @JavascriptInterface
